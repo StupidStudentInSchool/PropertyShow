@@ -85,6 +85,8 @@ const handleLogin = async () => {
     const response = await authApi.login(username.value, password.value)
     
     if (response.code === 0) {
+      localStorage.setItem('token', response.data.token)
+      localStorage.setItem('user', JSON.stringify(response.data))
       window.location.href = '/'
     } else {
       showErrorToast(response.message || '登录失败')

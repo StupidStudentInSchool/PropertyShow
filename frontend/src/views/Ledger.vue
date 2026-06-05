@@ -1,147 +1,115 @@
 <template>
-  <div class="ledger-container">
-    <aside class="sidebar" :class="{ collapsed: isCollapsed }">
-      <div class="logo-area">
-        <div class="logo">
-          <LayoutDashboard :size="28" />
-        </div>
-        <span v-if="!isCollapsed" class="logo-text">物业透明化系统</span>
+  <div class="ledger-content">
+    <div class="page-header">
+      <div class="header-left">
+        <h2>财务台账</h2>
+        <p class="page-subtitle">记录和管理所有收支明细</p>
       </div>
-      
-      <nav class="sidebar-nav">
-        <ul class="nav-list">
-          <li 
-            v-for="item in menuItems" 
-            :key="item.path"
-            :class="{ active: activeMenu === item.name }"
-            @click="handleMenuClick(item.path, item.name)"
-          >
-            <component :is="item.icon" :size="18" />
-            <span v-if="!isCollapsed" class="nav-label">{{ item.label }}</span>
-          </li>
-        </ul>
-      </nav>
+      <button class="primary-btn" @click="openModal()">
+        <Plus :size="18" />
+        <span>新增收支</span>
+      </button>
+    </div>
 
-      <div class="sidebar-footer">
-        <button class="collapse-btn" @click="toggleSidebar">
-          <ChevronLeft v-if="!isCollapsed" :size="18" />
-          <ChevronRight v-else :size="18" />
-        </button>
-      </div>
-    </aside>
-
-    <main class="main-content">
-      <header class="top-header">
-        <div class="header-left">
-          <h2>财务台账</h2>
-          <p class="page-subtitle">记录和管理所有收支明细</p>
-        </div>
-        <button class="primary-btn" @click="openModal()">
-          <Plus :size="18" />
-          <span>新增收支</span>
-        </button>
-      </header>
-
-      <div class="content-wrapper">
-        <div class="stats-summary">
-          <div class="summary-item">
-            <div class="summary-icon income-icon">
-              <TrendingUp :size="20" />
-            </div>
-            <div class="summary-content">
-              <div class="summary-label">总收入</div>
-              <div class="summary-value income">¥{{ formatAmount(totalIncome) }}</div>
-            </div>
+    <div class="content-wrapper">
+      <div class="stats-summary">
+        <div class="summary-item">
+          <div class="summary-icon income-icon">
+            <TrendingUp :size="20" />
           </div>
-          <div class="summary-item">
-            <div class="summary-icon expense-icon">
-              <TrendingDown :size="20" />
-            </div>
-            <div class="summary-content">
-              <div class="summary-label">总支出</div>
-              <div class="summary-value expense">¥{{ formatAmount(totalExpense) }}</div>
-            </div>
-          </div>
-          <div class="summary-item">
-            <div class="summary-icon balance-icon">
-              <Wallet :size="20" />
-            </div>
-            <div class="summary-content">
-              <div class="summary-label">净余额</div>
-              <div class="summary-value" :class="balance >= 0 ? 'income' : 'expense'">
-                {{ balance >= 0 ? '+' : '' }}¥{{ formatAmount(Math.abs(balance)) }}
-              </div>
-            </div>
+          <div class="summary-content">
+            <div class="summary-label">总收入</div>
+            <div class="summary-value income">¥{{ formatAmount(totalIncome) }}</div>
           </div>
         </div>
-
-        <div class="data-card">
-          <div class="card-toolbar">
-            <div class="filter-group">
-              <select class="filter-select" v-model="filterType" @change="loadEntries">
-                <option value="">全部类型</option>
-                <option value="INCOME">收入</option>
-                <option value="EXPENSE">支出</option>
-              </select>
-              <input 
-                type="text" 
-                class="search-input" 
-                v-model="searchKeyword" 
-                placeholder="搜索对方单位..."
-                @keyup.enter="loadEntries"
-              />
+        <div class="summary-item">
+          <div class="summary-icon expense-icon">
+            <TrendingDown :size="20" />
+          </div>
+          <div class="summary-content">
+            <div class="summary-label">总支出</div>
+            <div class="summary-value expense">¥{{ formatAmount(totalExpense) }}</div>
+          </div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-icon balance-icon">
+            <Wallet :size="20" />
+          </div>
+          <div class="summary-content">
+            <div class="summary-label">净余额</div>
+            <div class="summary-value" :class="balance >= 0 ? 'income' : 'expense'">
+              {{ balance >= 0 ? '+' : '' }}¥{{ formatAmount(Math.abs(balance)) }}
             </div>
-          </div>
-
-          <div class="table-container">
-            <table class="data-table">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>类型</th>
-                  <th>类别</th>
-                  <th>金额</th>
-                  <th>对方单位</th>
-                  <th>发生日期</th>
-                  <th>操作</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="entry in filteredEntries" :key="entry.id">
-                  <td class="text-muted">#{{ entry.id }}</td>
-                  <td>
-                    <span :class="['type-badge', entry.type.toLowerCase()]">
-                      {{ entry.type === 'INCOME' ? '收入' : '支出' }}
-                    </span>
-                  </td>
-                  <td>{{ getCategoryLabel(entry.category) }}</td>
-                  <td :class="entry.type === 'INCOME' ? 'text-success' : 'text-danger'">
-                    {{ entry.type === 'INCOME' ? '+' : '-' }}¥{{ formatAmount(entry.amount) }}
-                  </td>
-                  <td>{{ entry.counterparty }}</td>
-                  <td class="text-muted">{{ formatDate(entry.occurredAt) }}</td>
-                  <td>
-                    <button class="action-btn edit-btn" @click="openModal(true, entry)">
-                      <Edit3 :size="14" />
-                      <span>编辑</span>
-                    </button>
-                    <button class="action-btn delete-btn" @click="deleteEntry(entry.id)">
-                      <Trash2 :size="14" />
-                      <span>删除</span>
-                    </button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="empty-state" v-if="filteredEntries.length === 0">
-            <FileText :size="48" />
-            <p>暂无数据</p>
           </div>
         </div>
       </div>
-    </main>
+
+      <div class="data-card">
+        <div class="card-toolbar">
+          <div class="filter-group">
+            <select class="filter-select" v-model="filterType" @change="loadEntries">
+              <option value="">全部类型</option>
+              <option value="INCOME">收入</option>
+              <option value="EXPENSE">支出</option>
+            </select>
+            <input 
+              type="text" 
+              class="search-input" 
+              v-model="searchKeyword" 
+              placeholder="搜索对方单位..."
+              @keyup.enter="loadEntries"
+            />
+          </div>
+        </div>
+
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>类型</th>
+                <th>类别</th>
+                <th>金额</th>
+                <th>对方单位</th>
+                <th>发生日期</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="entry in filteredEntries" :key="entry.id">
+                <td class="text-muted">#{{ entry.id }}</td>
+                <td>
+                  <span :class="['type-badge', entry.type.toLowerCase()]">
+                    {{ entry.type === 'INCOME' ? '收入' : '支出' }}
+                  </span>
+                </td>
+                <td>{{ getCategoryLabel(entry.category) }}</td>
+                <td :class="entry.type === 'INCOME' ? 'text-success' : 'text-danger'">
+                  {{ entry.type === 'INCOME' ? '+' : '-' }}¥{{ formatAmount(entry.amount) }}
+                </td>
+                <td>{{ entry.counterparty }}</td>
+                <td class="text-muted">{{ formatDate(entry.occurredAt) }}</td>
+                <td>
+                  <button class="action-btn edit-btn" @click="openModal(true, entry)">
+                    <Edit3 :size="14" />
+                    <span>编辑</span>
+                  </button>
+                  <button class="action-btn delete-btn" @click="deleteEntry(entry.id)">
+                    <Trash2 :size="14" />
+                    <span>删除</span>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="empty-state" v-if="filteredEntries.length === 0">
+          <FileText :size="48" />
+          <p>暂无数据</p>
+        </div>
+      </div>
+    </div>
 
     <!-- 新增/编辑弹窗 -->
     <div class="modal-overlay" v-if="showModal" @click.self="closeModal">
@@ -259,23 +227,9 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, reactive } from 'vue'
 import {
-  Plus, TrendingUp, TrendingDown, Wallet, Eye, Edit3, Trash2, X, FileText, Upload, AlertTriangle,
-  LayoutDashboard, Home, Vote, MessageSquare, Building2, Receipt, Shield, ChevronLeft, ChevronRight
+  Plus, TrendingUp, TrendingDown, Wallet, Edit3, Trash2, X, FileText, AlertTriangle
 } from 'lucide-vue-next'
 import { ledgerApi } from '../api'
-
-const isCollapsed = ref(localStorage.getItem('sidebarCollapsed') === 'true')
-const activeMenu = ref('ledger')
-
-const menuItems = [
-  { path: '/', name: 'dashboard', label: '首页', icon: Home },
-  { path: '/ledger', name: 'ledger', label: '财务台账', icon: FileText },
-  { path: '/vote', name: 'vote', label: '业主投票', icon: Vote },
-  { path: '/inquiry', name: 'inquiry', label: '业主质询', icon: MessageSquare },
-  { path: '/community', name: 'community', label: '小区管理', icon: Building2 },
-  { path: '/bill', name: 'bill', label: '账单管理', icon: Receipt },
-  { path: '/audit', name: 'audit', label: '审计日志', icon: Shield }
-]
 
 const categories = [
   { value: 'PROPERTY_FEE', label: '物业费' },
@@ -342,16 +296,6 @@ const filteredEntries = computed(() => {
   })
 })
 
-const toggleSidebar = () => {
-  isCollapsed.value = !isCollapsed.value
-  localStorage.setItem('sidebarCollapsed', String(isCollapsed.value))
-}
-
-const handleMenuClick = (path: string, name: string) => {
-  activeMenu.value = name
-  window.location.href = path
-}
-
 const getCategoryLabel = (category: string) => {
   return categoryMap[category] || category
 }
@@ -373,19 +317,6 @@ const loadEntries = async () => {
     }
   } catch (error) {
     console.error('加载财务记录失败:', error)
-  }
-}
-
-const loadStatistics = async () => {
-  try {
-    const response = await ledgerApi.getStatistics()
-    if (response.code === 0) {
-      const data = response.data
-      totalIncome.value = data.totalIncome || 0
-      totalExpense.value = data.totalExpense || 0
-    }
-  } catch (error) {
-    console.error('加载统计数据失败:', error)
   }
 }
 
@@ -487,126 +418,15 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.ledger-container {
-  display: flex;
-  min-height: 100vh;
-  background: #f8fafc;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-.sidebar {
-  width: 220px;
-  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-  color: #e2e8f0;
-  display: flex;
-  flex-direction: column;
-  transition: width 0.3s ease;
-}
-
-.sidebar.collapsed {
-  width: 64px;
-}
-
-.logo-area {
-  display: flex;
-  align-items: center;
-  padding: 24px;
-  border-bottom: 1px solid #334155;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  border-radius: 10px;
-  margin-right: 12px;
-  color: #fff;
-}
-
-.logo-text {
-  font-size: 16px;
-  font-weight: 600;
-  color: #f1f5f9;
-}
-
-.sidebar-nav {
-  flex: 1;
-  padding: 16px 0;
-}
-
-.nav-list {
-  list-style: none;
-  padding: 0 8px;
-}
-
-.nav-list li {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  margin: 4px 0;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #94a3b8;
-}
-
-.nav-list li:hover {
-  background: rgba(59, 130, 246, 0.1);
-  color: #f1f5f9;
-}
-
-.nav-list li.active {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%);
-  color: #60a5fa;
-}
-
-.nav-label {
-  margin-left: 12px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.sidebar-footer {
-  padding: 16px;
-  border-top: 1px solid #334155;
-}
-
-.collapse-btn {
+.ledger-content {
   width: 100%;
-  background: transparent;
-  border: 1px solid #475569;
-  border-radius: 8px;
-  color: #94a3b8;
-  cursor: pointer;
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
 }
 
-.collapse-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #f1f5f9;
-}
-
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.top-header {
-  background: #ffffff;
-  padding: 16px 28px;
+.page-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+  margin-bottom: 24px;
 }
 
 .header-left h2 {
@@ -643,9 +463,7 @@ onMounted(async () => {
 }
 
 .content-wrapper {
-  flex: 1;
-  padding: 24px;
-  overflow-y: auto;
+  width: 100%;
 }
 
 .stats-summary {

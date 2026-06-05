@@ -11,6 +11,7 @@ import { LedgerModule } from './modules/ledger/ledger.module';
 import { GovernanceModule } from './modules/governance/governance.module';
 import { DisclosureModule } from './modules/disclosure/disclosure.module';
 import { AuditModule } from './modules/audit/audit.module';
+import { PublicModule } from './modules/public/public.module';
 
 @Module({
   imports: [
@@ -29,7 +30,7 @@ import { AuditModule } from './modules/audit/audit.module';
       password: process.env.DB_PASSWORD || 'root',
       database: process.env.DB_DATABASE || 'property_show',
       charset: 'utf8mb4',
-      synchronize: false, // 生产环境禁用
+      synchronize: true, // 开发环境启用，生产环境应禁用
       logging: process.env.NODE_ENV === 'development',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
@@ -48,6 +49,7 @@ import { AuditModule } from './modules/audit/audit.module';
     GovernanceModule,
     DisclosureModule,
     AuditModule,
+    PublicModule,
   ],
 })
 export class AppModule {}

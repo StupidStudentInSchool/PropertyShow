@@ -30,12 +30,19 @@ export class DisclosureService {
   ) {}
 
   async create(dto: CreateDisclosureDto): Promise<Disclosure> {
-    const disclosure = this.disclosureRepository.create({
-      ...dto,
+    const data: Partial<Disclosure> = {
+      title: dto.title,
+      content: dto.content,
+      type: dto.type,
+      communityId: dto.communityId,
+      createdBy: dto.createdBy,
+      scheduledAt: dto.scheduledAt,
+      attachmentUrls: dto.attachmentUrls,
       status: dto.scheduledAt ? DisclosureStatus.DRAFT : DisclosureStatus.PUBLISHED,
-      publishedAt: dto.scheduledAt ? null : new Date(),
-    });
-    return this.disclosureRepository.save(disclosure);
+      publishedAt: dto.scheduledAt ? undefined : new Date(),
+    };
+    const disclosure = this.disclosureRepository.create(data);
+    return this.disclosureRepository.save<Disclosure>(disclosure);
   }
 
   async findAll(

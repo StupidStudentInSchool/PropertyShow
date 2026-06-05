@@ -59,6 +59,7 @@ export class LedgerService {
     const entry = this.ledgerRepository.create(dto);
     
     const prevChain = await this.hashChainRepository.findOne({
+      where: {},
       order: { chainIndex: 'DESC' }
     });
     

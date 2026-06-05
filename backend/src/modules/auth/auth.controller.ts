@@ -14,41 +14,31 @@ export class AuthController {
   async login(@Body() body: { username: string; password: string }): Promise<any> {
     const result = await this.authService.login(body.username, body.password);
     if (result) {
-      return { 
-        code: 0, 
-        message: 'success', 
-        data: {
-          token: result.access_token,
-          username: result.username,
-          role: result.role
-        },
-        timestamp: Date.now() 
+      return {
+        token: result.access_token,
+        username: result.username,
+        role: result.role
       };
     }
-    return { code: 1001, message: '用户名或密码错误', timestamp: Date.now() };
+    throw new Error('用户名或密码错误');
   }
 
   @Get('me')
   async getProfile(@Headers('authorization') authHeader: string): Promise<any> {
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return { code: 1002, message: '未授权', timestamp: Date.now() };
+      throw new Error('未授权');
     }
     
     const token = authHeader.substring(7);
     const payload = await this.authService.validateToken(token);
     
     if (payload) {
-      return { 
-        code: 0, 
-        message: 'success', 
-        data: {
-          id: payload.sub,
-          username: payload.username,
-          role: payload.role
-        },
-        timestamp: Date.now() 
+      return {
+        id: payload.sub,
+        username: payload.username,
+        role: payload.role
       };
     }
-    return { code: 1003, message: 'token无效', timestamp: Date.now() };
+    throw new Error('token无效');
   }
 }

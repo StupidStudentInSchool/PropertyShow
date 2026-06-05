@@ -45,6 +45,6 @@ export class Community {
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
 
-  @OneToMany(() => LedgerEntry, entry => entry.community)
+  @OneToMany(() => LedgerEntry, entry => entry.communityId)
   ledgerEntries: LedgerEntry[];
 }

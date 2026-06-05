@@ -1,5 +1,4 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToOne, JoinColumn } from 'typeorm';
-import { Community } from './community.entity';
+import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 
 export enum EntryType {
   INCOME = 'INCOME',
@@ -67,8 +66,4 @@ export class LedgerEntry {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updatedAt: Date;
-
-  @ManyToOne(() => Community, community => community.ledgerEntries)
-  @JoinColumn({ name: 'community_id' })
-  community: Community;
 }

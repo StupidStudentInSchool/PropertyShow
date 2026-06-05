@@ -63,9 +63,10 @@ export class AuditService {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    const todayCount = await this.auditLogRepository.count({
-      where: { createdAt: () => 'created_at >= CURDATE()' }
-    });
+    const todayCount = await this.auditLogRepository
+      .createQueryBuilder('log')
+      .where('log.createdAt >= CURDATE()')
+      .getCount();
 
     const byModule = await this.auditLogRepository
       .createQueryBuilder('log')

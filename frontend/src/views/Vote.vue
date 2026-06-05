@@ -1,48 +1,17 @@
 <template>
-  <div class="vote-container">
-    <aside class="sidebar" :class="{ collapsed: isCollapsed }">
-      <div class="logo-area">
-        <div class="logo">
-          <LayoutDashboard :size="28" />
-        </div>
-        <span v-if="!isCollapsed" class="logo-text">物业透明化系统</span>
+  <div class="vote-content">
+    <header class="top-header">
+      <div class="header-left">
+        <h2>业主投票</h2>
+        <p class="page-subtitle">管理和参与业主投票活动</p>
       </div>
-      
-      <nav class="sidebar-nav">
-        <ul class="nav-list">
-          <li 
-            v-for="item in menuItems" 
-            :key="item.path"
-            :class="{ active: activeMenu === item.name }"
-            @click="handleMenuClick(item.path, item.name)"
-          >
-            <component :is="item.icon" :size="18" />
-            <span v-if="!isCollapsed" class="nav-label">{{ item.label }}</span>
-          </li>
-        </ul>
-      </nav>
+      <button class="primary-btn" @click="openCreateModal()">
+        <Plus :size="18" />
+        <span>发起投票</span>
+      </button>
+    </header>
 
-      <div class="sidebar-footer">
-        <button class="collapse-btn" @click="toggleSidebar">
-          <ChevronLeft v-if="!isCollapsed" :size="18" />
-          <ChevronRight v-else :size="18" />
-        </button>
-      </div>
-    </aside>
-
-    <main class="main-content">
-      <header class="top-header">
-        <div class="header-left">
-          <h2>业主投票</h2>
-          <p class="page-subtitle">管理和参与业主投票活动</p>
-        </div>
-        <button class="primary-btn" @click="openCreateModal()">
-          <Plus :size="18" />
-          <span>发起投票</span>
-        </button>
-      </header>
-
-      <div class="content-wrapper">
+    <div class="content-wrapper">
         <div class="tabs">
           <button 
             :class="['tab-btn', { active: activeTab === 'active' }]" 
@@ -152,7 +121,6 @@
           </div>
         </div>
       </div>
-    </main>
 
     <!-- 创建投票弹窗 -->
     <div class="modal-overlay" v-if="showCreateModal" @click.self="closeCreateModal">
@@ -357,24 +325,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, reactive } from 'vue'
 import {
-  Plus, Vote, Users, Calendar, CheckCircle, XCircle, Eye, X, User,
-  LayoutDashboard, Home, MessageSquare, Building2, Receipt, Shield, ChevronLeft, ChevronRight
+  Plus, Vote, Users, Calendar, CheckCircle, XCircle, Eye, X, User
 } from 'lucide-vue-next'
 import { governanceApi } from '../api'
 
-const isCollapsed = ref(localStorage.getItem('sidebarCollapsed') === 'true')
-const activeMenu = ref('vote')
 const activeTab = ref('active')
-
-const menuItems = [
-  { path: '/', name: 'dashboard', label: '首页', icon: Home },
-  { path: '/ledger', name: 'ledger', label: '财务台账', icon: MessageSquare },
-  { path: '/vote', name: 'vote', label: '业主投票', icon: Vote },
-  { path: '/inquiry', name: 'inquiry', label: '业主质询', icon: MessageSquare },
-  { path: '/community', name: 'community', label: '小区管理', icon: Building2 },
-  { path: '/bill', name: 'bill', label: '账单管理', icon: Receipt },
-  { path: '/audit', name: 'audit', label: '审计日志', icon: Shield }
-]
 
 const votes = ref<any[]>([])
 const showCreateModal = ref(false)
@@ -400,16 +355,6 @@ const filteredVotes = computed(() => {
     return vote.status === 'ENDED'
   })
 })
-
-const toggleSidebar = () => {
-  isCollapsed.value = !isCollapsed.value
-  localStorage.setItem('sidebarCollapsed', String(isCollapsed.value))
-}
-
-const handleMenuClick = (path: string, name: string) => {
-  activeMenu.value = name
-  window.location.href = path
-}
 
 const formatDate = (dateStr: string) => {
   const date = new Date(dateStr)
@@ -568,117 +513,10 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.vote-container {
-  display: flex;
-  min-height: 100vh;
+.vote-content {
+  min-height: 100%;
   background: #f8fafc;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-}
-
-.sidebar {
-  width: 220px;
-  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
-  color: #e2e8f0;
-  display: flex;
-  flex-direction: column;
-  transition: width 0.3s ease;
-}
-
-.sidebar.collapsed {
-  width: 64px;
-}
-
-.logo-area {
-  display: flex;
-  align-items: center;
-  padding: 24px;
-  border-bottom: 1px solid #334155;
-}
-
-.logo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  border-radius: 10px;
-  margin-right: 12px;
-  color: #fff;
-}
-
-.logo-text {
-  font-size: 16px;
-  font-weight: 600;
-  color: #f1f5f9;
-}
-
-.sidebar-nav {
-  flex: 1;
-  padding: 16px 0;
-}
-
-.nav-list {
-  list-style: none;
-  padding: 0 8px;
-}
-
-.nav-list li {
-  display: flex;
-  align-items: center;
-  padding: 12px 16px;
-  margin: 4px 0;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  color: #94a3b8;
-}
-
-.nav-list li:hover {
-  background: rgba(59, 130, 246, 0.1);
-  color: #f1f5f9;
-}
-
-.nav-list li.active {
-  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%);
-  color: #60a5fa;
-}
-
-.nav-label {
-  margin-left: 12px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.sidebar-footer {
-  padding: 16px;
-  border-top: 1px solid #334155;
-}
-
-.collapse-btn {
-  width: 100%;
-  background: transparent;
-  border: 1px solid #475569;
-  border-radius: 8px;
-  color: #94a3b8;
-  cursor: pointer;
-  padding: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-}
-
-.collapse-btn:hover {
-  background: rgba(255, 255, 255, 0.05);
-  color: #f1f5f9;
-}
-
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
 }
 
 .top-header {
