@@ -1,119 +1,147 @@
 <template>
   <div class="ledger-container">
-    <div class="page-header">
-      <div class="header-left">
-        <h2>财务台账</h2>
-        <p class="page-subtitle">记录和管理所有收支明细</p>
+    <aside class="sidebar" :class="{ collapsed: isCollapsed }">
+      <div class="logo-area">
+        <div class="logo">
+          <LayoutDashboard :size="28" />
+        </div>
+        <span v-if="!isCollapsed" class="logo-text">物业透明化系统</span>
       </div>
-      <button class="primary-btn" @click="openModal()">
-        <Plus :size="18" />
-        <span>新增收支</span>
-      </button>
-    </div>
+      
+      <nav class="sidebar-nav">
+        <ul class="nav-list">
+          <li 
+            v-for="item in menuItems" 
+            :key="item.path"
+            :class="{ active: activeMenu === item.name }"
+            @click="handleMenuClick(item.path, item.name)"
+          >
+            <component :is="item.icon" :size="18" />
+            <span v-if="!isCollapsed" class="nav-label">{{ item.label }}</span>
+          </li>
+        </ul>
+      </nav>
 
-    <div class="stats-summary">
-      <div class="summary-item">
-        <div class="summary-icon income-icon">
-          <TrendingUp :size="20" />
-        </div>
-        <div class="summary-content">
-          <div class="summary-label">总收入</div>
-          <div class="summary-value income">¥{{ totalIncome.toLocaleString() }}</div>
-        </div>
+      <div class="sidebar-footer">
+        <button class="collapse-btn" @click="toggleSidebar">
+          <ChevronLeft v-if="!isCollapsed" :size="18" />
+          <ChevronRight v-else :size="18" />
+        </button>
       </div>
-      <div class="summary-item">
-        <div class="summary-icon expense-icon">
-          <TrendingDown :size="20" />
+    </aside>
+
+    <main class="main-content">
+      <header class="top-header">
+        <div class="header-left">
+          <h2>财务台账</h2>
+          <p class="page-subtitle">记录和管理所有收支明细</p>
         </div>
-        <div class="summary-content">
-          <div class="summary-label">总支出</div>
-          <div class="summary-value expense">¥{{ totalExpense.toLocaleString() }}</div>
+        <button class="primary-btn" @click="openModal()">
+          <Plus :size="18" />
+          <span>新增收支</span>
+        </button>
+      </header>
+
+      <div class="content-wrapper">
+        <div class="stats-summary">
+          <div class="summary-item">
+            <div class="summary-icon income-icon">
+              <TrendingUp :size="20" />
+            </div>
+            <div class="summary-content">
+              <div class="summary-label">总收入</div>
+              <div class="summary-value income">¥{{ formatAmount(totalIncome) }}</div>
+            </div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-icon expense-icon">
+              <TrendingDown :size="20" />
+            </div>
+            <div class="summary-content">
+              <div class="summary-label">总支出</div>
+              <div class="summary-value expense">¥{{ formatAmount(totalExpense) }}</div>
+            </div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-icon balance-icon">
+              <Wallet :size="20" />
+            </div>
+            <div class="summary-content">
+              <div class="summary-label">净余额</div>
+              <div class="summary-value" :class="balance >= 0 ? 'income' : 'expense'">
+                {{ balance >= 0 ? '+' : '' }}¥{{ formatAmount(Math.abs(balance)) }}
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-      <div class="summary-item">
-        <div class="summary-icon balance-icon">
-          <Wallet :size="20" />
-        </div>
-        <div class="summary-content">
-          <div class="summary-label">净余额</div>
-          <div class="summary-value" :class="balance >= 0 ? 'income' : 'expense'">
-            {{ balance >= 0 ? '+' : '' }}¥{{ Math.abs(balance).toLocaleString() }}
+
+        <div class="data-card">
+          <div class="card-toolbar">
+            <div class="filter-group">
+              <select class="filter-select" v-model="filterType" @change="loadEntries">
+                <option value="">全部类型</option>
+                <option value="INCOME">收入</option>
+                <option value="EXPENSE">支出</option>
+              </select>
+              <input 
+                type="text" 
+                class="search-input" 
+                v-model="searchKeyword" 
+                placeholder="搜索对方单位..."
+                @keyup.enter="loadEntries"
+              />
+            </div>
+          </div>
+
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>类型</th>
+                  <th>类别</th>
+                  <th>金额</th>
+                  <th>对方单位</th>
+                  <th>发生日期</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="entry in filteredEntries" :key="entry.id">
+                  <td class="text-muted">#{{ entry.id }}</td>
+                  <td>
+                    <span :class="['type-badge', entry.type.toLowerCase()]">
+                      {{ entry.type === 'INCOME' ? '收入' : '支出' }}
+                    </span>
+                  </td>
+                  <td>{{ getCategoryLabel(entry.category) }}</td>
+                  <td :class="entry.type === 'INCOME' ? 'text-success' : 'text-danger'">
+                    {{ entry.type === 'INCOME' ? '+' : '-' }}¥{{ formatAmount(entry.amount) }}
+                  </td>
+                  <td>{{ entry.counterparty }}</td>
+                  <td class="text-muted">{{ formatDate(entry.occurredAt) }}</td>
+                  <td>
+                    <button class="action-btn edit-btn" @click="openModal(true, entry)">
+                      <Edit3 :size="14" />
+                      <span>编辑</span>
+                    </button>
+                    <button class="action-btn delete-btn" @click="deleteEntry(entry.id)">
+                      <Trash2 :size="14" />
+                      <span>删除</span>
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="empty-state" v-if="filteredEntries.length === 0">
+            <FileText :size="48" />
+            <p>暂无数据</p>
           </div>
         </div>
       </div>
-    </div>
-
-    <div class="data-card">
-      <div class="card-toolbar">
-        <div class="filter-group">
-          <select class="filter-select" v-model="filterType">
-            <option value="">全部类型</option>
-            <option value="INCOME">收入</option>
-            <option value="EXPENSE">支出</option>
-          </select>
-          <input 
-            type="text" 
-            class="search-input" 
-            v-model="searchKeyword" 
-            placeholder="搜索对方单位..."
-          />
-        </div>
-      </div>
-
-      <div class="table-container">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>ID</th>
-              <th>类型</th>
-              <th>类别</th>
-              <th>金额</th>
-              <th>对方单位</th>
-              <th>发生日期</th>
-              <th>凭证</th>
-              <th>操作</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="entry in filteredEntries" :key="entry.id">
-              <td class="text-muted">#{{ entry.id }}</td>
-              <td>
-                <span :class="['type-badge', entry.type.toLowerCase()]">
-                  {{ entry.type === 'INCOME' ? '收入' : '支出' }}
-                </span>
-              </td>
-              <td>{{ entry.categoryName }}</td>
-              <td :class="entry.type === 'INCOME' ? 'text-success' : 'text-danger'">
-                {{ entry.type === 'INCOME' ? '+' : '-' }}¥{{ formatAmount(entry.amount) }}
-              </td>
-              <td>{{ entry.counterparty }}</td>
-              <td class="text-muted">{{ entry.occurredAt }}</td>
-              <td>
-                <button class="action-btn view-btn" @click="viewEvidence(entry)">
-                  <Eye :size="14" />
-                  <span>查看</span>
-                </button>
-              </td>
-              <td>
-                <button class="action-btn edit-btn" @click="openModal(true, entry)">
-                  <Edit3 :size="14" />
-                  <span>编辑</span>
-                </button>
-                <button class="action-btn delete-btn" @click="deleteEntry(entry.id)">
-                  <Trash2 :size="14" />
-                  <span>删除</span>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="empty-state" v-if="filteredEntries.length === 0">
-        <FileText :size="48" />
-        <p>暂无数据</p>
-      </div>
-    </div>
+    </main>
 
     <!-- 新增/编辑弹窗 -->
     <div class="modal-overlay" v-if="showModal" @click.self="closeModal">
@@ -156,7 +184,7 @@
               <div class="input-group">
                 <span class="input-prefix">¥</span>
                 <input 
-                  v-model="formData.amount" 
+                  v-model.number="formData.amount" 
                   type="number" 
                   class="form-input" 
                   placeholder="请输入金额" 
@@ -191,12 +219,13 @@
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">凭证上传</label>
-              <div class="upload-area">
-                <Upload :size="24" />
-                <span>点击或拖拽上传凭证</span>
-                <p class="upload-hint">支持 PDF、JPG、PNG 格式</p>
-              </div>
+              <label class="form-label">描述</label>
+              <textarea 
+                v-model="formData.description" 
+                class="form-textarea" 
+                placeholder="请输入描述"
+                rows="3"
+              ></textarea>
             </div>
           </div>
 
@@ -228,34 +257,39 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted, reactive } from 'vue'
 import {
-  Plus, TrendingUp, TrendingDown, Wallet, Eye, Edit3, Trash2, X, FileText, Upload, AlertTriangle
+  Plus, TrendingUp, TrendingDown, Wallet, Eye, Edit3, Trash2, X, FileText, Upload, AlertTriangle,
+  LayoutDashboard, Home, Vote, MessageSquare, Building2, Receipt, Shield, ChevronLeft, ChevronRight
 } from 'lucide-vue-next'
+import { ledgerApi } from '../api'
 
-const entries = ref([
-  { id: 1, type: 'INCOME', category: 'PROPERTY_FEE', categoryName: '物业费', amount: 850000, counterparty: '业主缴纳', occurredAt: '2026-06-15', evidence: '凭证1.pdf' },
-  { id: 2, type: 'EXPENSE', category: 'STAFF_SALARY', categoryName: '人员工资', amount: 420000, counterparty: '物业员工', occurredAt: '2026-06-01', evidence: '凭证2.pdf' },
-  { id: 3, type: 'INCOME', category: 'PARKING_FEE', categoryName: '停车费', amount: 280000, counterparty: '业主缴纳', occurredAt: '2026-06-20', evidence: '凭证3.pdf' },
-  { id: 4, type: 'EXPENSE', category: 'CLEANING', categoryName: '保洁服务', amount: 150000, counterparty: '保洁公司', occurredAt: '2026-06-10', evidence: '凭证4.pdf' },
-  { id: 5, type: 'EXPENSE', category: 'SECURITY', categoryName: '安保服务', amount: 180000, counterparty: '安保公司', occurredAt: '2026-06-15', evidence: '凭证5.pdf' },
-  { id: 6, type: 'INCOME', category: 'ADVERTISING', categoryName: '广告收入', amount: 120000, counterparty: '某广告公司', occurredAt: '2026-06-10', evidence: '凭证6.pdf' },
-  { id: 7, type: 'EXPENSE', category: 'MAINTENANCE', categoryName: '设备维保', amount: 130000, counterparty: '维保公司', occurredAt: '2026-06-18', evidence: '凭证7.pdf' },
-  { id: 8, type: 'EXPENSE', category: 'UTILITIES', categoryName: '水电费', amount: 100000, counterparty: '电力公司', occurredAt: '2026-06-25', evidence: '凭证8.pdf' }
-])
+const isCollapsed = ref(localStorage.getItem('sidebarCollapsed') === 'true')
+const activeMenu = ref('ledger')
+
+const menuItems = [
+  { path: '/', name: 'dashboard', label: '首页', icon: Home },
+  { path: '/ledger', name: 'ledger', label: '财务台账', icon: FileText },
+  { path: '/vote', name: 'vote', label: '业主投票', icon: Vote },
+  { path: '/inquiry', name: 'inquiry', label: '业主质询', icon: MessageSquare },
+  { path: '/community', name: 'community', label: '小区管理', icon: Building2 },
+  { path: '/bill', name: 'bill', label: '账单管理', icon: Receipt },
+  { path: '/audit', name: 'audit', label: '审计日志', icon: Shield }
+]
 
 const categories = [
   { value: 'PROPERTY_FEE', label: '物业费' },
   { value: 'PARKING_FEE', label: '停车费' },
   { value: 'ADVERTISING', label: '广告收入' },
+  { value: 'OTHER_INCOME', label: '其他收入' },
   { value: 'STAFF_SALARY', label: '人员工资' },
   { value: 'CLEANING', label: '保洁服务' },
-  { value: 'SECURITY', label: '安保服务' },
   { value: 'MAINTENANCE', label: '设备维保' },
-  { value: 'UTILITIES', label: '水电费' },
-  { value: 'OTHER', label: '其他' }
+  { value: 'UTILITIES', label: '水电费用' },
+  { value: 'OTHER_EXPENSE', label: '其他支出' }
 ]
 
+const entries = ref<any[]>([])
 const showModal = ref(false)
 const isEdit = ref(false)
 const showDeleteConfirm = ref(false)
@@ -263,15 +297,27 @@ const deleteId = ref<number | null>(null)
 const filterType = ref('')
 const searchKeyword = ref('')
 
-const formData = ref({
+const formData = reactive({
   id: 0 as number,
-  type: 'INCOME',
+  type: 'INCOME' as string,
   category: '',
-  amount: '',
+  amount: 0 as number,
   counterparty: '',
   occurredAt: '',
-  evidence: ''
+  description: ''
 })
+
+const categoryMap: Record<string, string> = {
+  PROPERTY_FEE: '物业费',
+  PARKING_FEE: '停车费',
+  ADVERTISING: '广告费',
+  OTHER_INCOME: '其他收入',
+  STAFF_SALARY: '人员工资',
+  CLEANING: '保洁服务',
+  MAINTENANCE: '设备维保',
+  UTILITIES: '水电费用',
+  OTHER_EXPENSE: '其他支出',
+}
 
 const totalIncome = computed(() => {
   return entries.value
@@ -296,28 +342,71 @@ const filteredEntries = computed(() => {
   })
 })
 
+const toggleSidebar = () => {
+  isCollapsed.value = !isCollapsed.value
+  localStorage.setItem('sidebarCollapsed', String(isCollapsed.value))
+}
+
+const handleMenuClick = (path: string, name: string) => {
+  activeMenu.value = name
+  window.location.href = path
+}
+
+const getCategoryLabel = (category: string) => {
+  return categoryMap[category] || category
+}
+
+const formatAmount = (amount: number) => {
+  return amount.toLocaleString('zh-CN', { minimumFractionDigits: 2 })
+}
+
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
+
+const loadEntries = async () => {
+  try {
+    const response = await ledgerApi.getAll()
+    if (response.code === 0) {
+      entries.value = response.data
+    }
+  } catch (error) {
+    console.error('加载财务记录失败:', error)
+  }
+}
+
+const loadStatistics = async () => {
+  try {
+    const response = await ledgerApi.getStatistics()
+    if (response.code === 0) {
+      const data = response.data
+      totalIncome.value = data.totalIncome || 0
+      totalExpense.value = data.totalExpense || 0
+    }
+  } catch (error) {
+    console.error('加载统计数据失败:', error)
+  }
+}
+
 const openModal = (edit = false, data?: any) => {
   isEdit.value = edit
   if (edit && data) {
-    formData.value = { 
-      id: data.id,
-      type: data.type,
-      category: data.category,
-      amount: data.amount.toString(),
-      counterparty: data.counterparty,
-      occurredAt: data.occurredAt,
-      evidence: data.evidence || ''
-    }
+    formData.id = data.id
+    formData.type = data.type
+    formData.category = data.category
+    formData.amount = data.amount
+    formData.counterparty = data.counterparty
+    formData.occurredAt = formatDate(data.occurredAt)
+    formData.description = data.description || ''
   } else {
-    formData.value = {
-      id: 0,
-      type: 'INCOME',
-      category: '',
-      amount: '',
-      counterparty: '',
-      occurredAt: '',
-      evidence: ''
-    }
+    formData.id = 0
+    formData.type = 'INCOME'
+    formData.category = ''
+    formData.amount = 0
+    formData.counterparty = ''
+    formData.occurredAt = ''
+    formData.description = ''
   }
   showModal.value = true
 }
@@ -326,36 +415,46 @@ const closeModal = () => {
   showModal.value = false
 }
 
-const saveEntry = () => {
-  if (!formData.value.category || !formData.value.amount || !formData.value.counterparty || !formData.value.occurredAt) {
+const saveEntry = async () => {
+  if (!formData.category || !formData.amount || !formData.counterparty || !formData.occurredAt) {
     alert('请填写完整信息')
     return
   }
 
-  if (isEdit.value && formData.value.id) {
-    const index = entries.value.findIndex(e => e.id === formData.value.id)
-    if (index !== -1) {
-      entries.value[index] = { 
-        ...entries.value[index],
-        ...formData.value, 
-        amount: Number(formData.value.amount),
-        categoryName: categories.find(c => c.value === formData.value.category)?.label || ''
-      }
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const userId = user.id || 'admin'
+
+    if (isEdit.value && formData.id) {
+      await ledgerApi.update(formData.id, {
+        type: formData.type,
+        category: formData.category,
+        amount: formData.amount,
+        counterparty: formData.counterparty,
+        occurredAt: formData.occurredAt,
+        description: formData.description
+      })
+      alert('修改成功')
+    } else {
+      await ledgerApi.create({
+        type: formData.type,
+        category: formData.category,
+        amount: formData.amount,
+        counterparty: formData.counterparty,
+        occurredAt: formData.occurredAt,
+        description: formData.description,
+        communityId: 1,
+        createdBy: userId
+      })
+      alert('新增成功')
     }
-    alert('修改成功')
-  } else {
-    const newId = Math.max(...entries.value.map(e => e.id)) + 1
-    const { id: _, ...rest } = formData.value
-    entries.value.unshift({
-      id: newId,
-      ...rest,
-      amount: Number(formData.value.amount),
-      categoryName: categories.find(c => c.value === formData.value.category)?.label || ''
-    })
-    alert('新增成功')
+    
+    closeModal()
+    await loadEntries()
+  } catch (error) {
+    console.error('保存失败:', error)
+    alert('保存失败，请重试')
   }
-  
-  closeModal()
 }
 
 const deleteEntry = (id: number) => {
@@ -368,38 +467,150 @@ const cancelDelete = () => {
   deleteId.value = null
 }
 
-const confirmDelete = () => {
+const confirmDelete = async () => {
   if (deleteId.value) {
-    entries.value = entries.value.filter(e => e.id !== deleteId.value)
-    alert('删除成功')
+    try {
+      await ledgerApi.delete(deleteId.value)
+      entries.value = entries.value.filter(e => e.id !== deleteId.value)
+      alert('删除成功')
+    } catch (error) {
+      console.error('删除失败:', error)
+      alert('删除失败，请重试')
+    }
   }
   cancelDelete()
 }
 
-const viewEvidence = (entry: any) => {
-  alert(`查看凭证: ${entry.evidence}`)
-}
-
-const formatAmount = (amount: number) => {
-  return amount.toLocaleString('zh-CN', { minimumFractionDigits: 2 })
-}
+onMounted(async () => {
+  await loadEntries()
+})
 </script>
 
 <style scoped>
 .ledger-container {
-  padding: 24px;
+  display: flex;
+  min-height: 100vh;
+  background: #f8fafc;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.page-header {
+.sidebar {
+  width: 220px;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 64px;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid #334155;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 10px;
+  margin-right: 12px;
+  color: #fff;
+}
+
+.logo-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 0;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 0 8px;
+}
+
+.nav-list li {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  margin: 4px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #94a3b8;
+}
+
+.nav-list li:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #f1f5f9;
+}
+
+.nav-list li.active {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%);
+  color: #60a5fa;
+}
+
+.nav-label {
+  margin-left: 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid #334155;
+}
+
+.collapse-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.top-header {
+  background: #ffffff;
+  padding: 16px 28px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .header-left h2 {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   color: #1e293b;
   margin: 0 0 4px 0;
@@ -429,6 +640,12 @@ const formatAmount = (amount: number) => {
 .primary-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+}
+
+.content-wrapper {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
 }
 
 .stats-summary {
@@ -626,15 +843,6 @@ const formatAmount = (amount: number) => {
   margin-right: 0;
 }
 
-.view-btn {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
-
-.view-btn:hover {
-  background: rgba(59, 130, 246, 0.15);
-}
-
 .edit-btn {
   background: rgba(245, 158, 11, 0.1);
   color: #f59e0b;
@@ -810,6 +1018,22 @@ const formatAmount = (amount: number) => {
   color: #94a3b8;
 }
 
+.form-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #334155;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-textarea:focus {
+  border-color: #3b82f6;
+}
+
 .input-group {
   display: flex;
   align-items: center;
@@ -834,30 +1058,6 @@ const formatAmount = (amount: number) => {
   border: none;
   border-radius: 0;
   padding: 12px 16px;
-}
-
-.upload-area {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 32px;
-  border: 2px dashed #cbd5e1;
-  border-radius: 12px;
-  cursor: pointer;
-  transition: all 0.2s;
-  color: #64748b;
-}
-
-.upload-area:hover {
-  border-color: #3b82f6;
-  background: rgba(59, 130, 246, 0.02);
-}
-
-.upload-hint {
-  font-size: 12px;
-  color: #94a3b8;
-  margin: 8px 0 0 0;
 }
 
 .modal-footer {

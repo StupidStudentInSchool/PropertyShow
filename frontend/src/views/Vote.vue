@@ -1,92 +1,158 @@
 <template>
   <div class="vote-container">
-    <div class="page-header">
-      <div class="header-left">
-        <h2>业主投票</h2>
-        <p class="page-subtitle">管理和查看业主投票活动</p>
+    <aside class="sidebar" :class="{ collapsed: isCollapsed }">
+      <div class="logo-area">
+        <div class="logo">
+          <LayoutDashboard :size="28" />
+        </div>
+        <span v-if="!isCollapsed" class="logo-text">物业透明化系统</span>
       </div>
-      <button class="primary-btn" @click="openCreateModal()">
-        <Plus :size="18" />
-        <span>发起投票</span>
-      </button>
-    </div>
-
-    <div class="filter-bar">
-      <select class="filter-select" v-model="filterStatus">
-        <option value="">全部状态</option>
-        <option value="ONGOING">进行中</option>
-        <option value="ENDED">已结束</option>
-      </select>
-    </div>
-
-    <div class="vote-grid">
-      <div 
-        v-for="vote in filteredVotes" 
-        :key="vote.id" 
-        class="vote-card"
-        :class="{ 'status-ended': vote.status === 'ENDED' }"
-      >
-        <div class="vote-header">
-          <div class="vote-title">{{ vote.title }}</div>
-          <span :class="['status-badge', vote.status.toLowerCase()]">
-            {{ vote.status === 'ONGOING' ? '进行中' : '已结束' }}
-          </span>
-        </div>
-        
-        <p class="vote-description">{{ vote.description }}</p>
-        
-        <div class="vote-meta">
-          <div class="meta-item">
-            <Users :size="14" />
-            <span>{{ vote.participants }} 人参与</span>
-          </div>
-          <div class="meta-item">
-            <Calendar :size="14" />
-            <span>{{ vote.endDate }}</span>
-          </div>
-        </div>
-
-        <div class="vote-progress">
-          <div 
-            v-for="option in vote.options" 
-            :key="option.id" 
-            class="progress-item"
+      
+      <nav class="sidebar-nav">
+        <ul class="nav-list">
+          <li 
+            v-for="item in menuItems" 
+            :key="item.path"
+            :class="{ active: activeMenu === item.name }"
+            @click="handleMenuClick(item.path, item.name)"
           >
-            <div class="progress-header">
-              <span class="option-text">{{ option.text }}</span>
-              <span class="option-percent">{{ getPercentage(option.votes, vote.totalVotes) }}%</span>
-            </div>
-            <div class="progress-bar">
-              <div 
-                class="progress-fill" 
-                :style="{ width: getPercentage(option.votes, vote.totalVotes) + '%' }"
-              ></div>
-            </div>
-            <span class="option-count">{{ option.votes }} 票</span>
-          </div>
-        </div>
+            <component :is="item.icon" :size="18" />
+            <span v-if="!isCollapsed" class="nav-label">{{ item.label }}</span>
+          </li>
+        </ul>
+      </nav>
 
-        <div class="vote-actions">
-          <button class="action-btn" @click="viewVote(vote)">
-            <Eye :size="14" />
-            <span>查看详情</span>
+      <div class="sidebar-footer">
+        <button class="collapse-btn" @click="toggleSidebar">
+          <ChevronLeft v-if="!isCollapsed" :size="18" />
+          <ChevronRight v-else :size="18" />
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-header">
+        <div class="header-left">
+          <h2>业主投票</h2>
+          <p class="page-subtitle">管理和参与业主投票活动</p>
+        </div>
+        <button class="primary-btn" @click="openCreateModal()">
+          <Plus :size="18" />
+          <span>发起投票</span>
+        </button>
+      </header>
+
+      <div class="content-wrapper">
+        <div class="tabs">
+          <button 
+            :class="['tab-btn', { active: activeTab === 'active' }]" 
+            @click="activeTab = 'active'; loadVotes()"
+          >
+            <Vote :size="16" />
+            <span>进行中</span>
           </button>
           <button 
-            v-if="vote.status === 'ONGOING'" 
-            class="action-btn primary" 
-            @click="voteNow(vote)"
+            :class="['tab-btn', { active: activeTab === 'ended' }]" 
+            @click="activeTab = 'ended'; loadVotes()"
           >
-            <CheckCircle :size="14" />
-            <span>参与投票</span>
+            <CheckCircle :size="16" />
+            <span>已结束</span>
           </button>
         </div>
-      </div>
-    </div>
 
-    <div class="empty-state" v-if="filteredVotes.length === 0">
-      <Vote :size="48" />
-      <p>暂无投票活动</p>
-    </div>
+        <div class="vote-list">
+          <div 
+            v-for="vote in filteredVotes" 
+            :key="vote.id" 
+            class="vote-card"
+          >
+            <div class="card-header">
+              <span :class="['status-badge', vote.status.toLowerCase()]">
+                {{ vote.status === 'ACTIVE' ? '进行中' : '已结束' }}
+              </span>
+              <span class="vote-id">#{{ vote.id }}</span>
+            </div>
+            
+            <h3 class="vote-title">{{ vote.title }}</h3>
+            <p class="vote-description">{{ vote.description }}</p>
+            
+            <div class="vote-meta">
+              <div class="meta-item">
+                <User :size="14" />
+                <span>{{ vote.createdBy }}</span>
+              </div>
+              <div class="meta-item">
+                <Calendar :size="14" />
+                <span>{{ formatDate(vote.startTime) }} - {{ formatDate(vote.endTime) }}</span>
+              </div>
+              <div class="meta-item">
+                <Users :size="14" />
+                <span>{{ vote.totalVotes }} 人已投票</span>
+              </div>
+            </div>
+
+            <div class="progress-section">
+              <div 
+                v-for="option in vote.options" 
+                :key="option.id" 
+                class="option-row"
+              >
+                <div class="option-info">
+                  <span class="option-text">{{ option.text }}</span>
+                  <span class="option-count">{{ option.votes }} 票 ({{ getPercentage(vote, option) }}%)</span>
+                </div>
+                <div class="progress-bar">
+                  <div 
+                    class="progress-fill" 
+                    :style="{ width: getPercentage(vote, option) + '%' }"
+                    :class="{ winning: isWinning(vote, option) }"
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="card-actions">
+              <button 
+                v-if="vote.status === 'ACTIVE' && !hasVoted(vote)"
+                class="btn btn-primary"
+                @click="openVoteModal(vote)"
+              >
+                <CheckCircle :size="16" />
+                <span>立即投票</span>
+              </button>
+              <button 
+                v-else-if="hasVoted(vote)"
+                class="btn btn-secondary"
+                disabled
+              >
+                <CheckCircle :size="16" />
+                <span>已投票</span>
+              </button>
+              <button 
+                v-if="vote.status === 'ACTIVE'"
+                class="btn btn-outline"
+                @click="endVote(vote.id)"
+              >
+                <XCircle :size="16" />
+                <span>结束投票</span>
+              </button>
+              <button 
+                class="btn btn-outline"
+                @click="openDetail(vote)"
+              >
+                <Eye :size="16" />
+                <span>查看详情</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="empty-state" v-if="filteredVotes.length === 0">
+            <Vote :size="48" />
+            <p>暂无投票记录</p>
+          </div>
+        </div>
+      </div>
+    </main>
 
     <!-- 创建投票弹窗 -->
     <div class="modal-overlay" v-if="showCreateModal" @click.self="closeCreateModal">
@@ -99,76 +165,87 @@
         </div>
         
         <form class="modal-form" @submit.prevent="createVote">
-          <div class="form-group">
-            <label class="form-label">投票标题 <span class="required">*</span></label>
-            <input 
-              v-model="newVote.title" 
-              type="text" 
-              class="form-input" 
-              placeholder="请输入投票标题" 
-              required
-            />
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">投票描述</label>
-            <textarea 
-              v-model="newVote.description" 
-              class="form-textarea" 
-              placeholder="请输入投票描述"
-              rows="3"
-            ></textarea>
-          </div>
-
-          <div class="form-group">
-            <label class="form-label">投票选项 <span class="required">*</span></label>
-            <div class="options-list">
-              <div 
-                v-for="(option, index) in newVote.options" 
-                :key="index" 
-                class="option-row"
-              >
-                <input 
-                  v-model="option.text" 
-                  type="text" 
-                  class="form-input option-input" 
-                  :placeholder="`选项 ${index + 1}`"
-                  required
-                />
-                <button 
-                  v-if="newVote.options.length > 2" 
-                  type="button" 
-                  class="remove-option-btn"
-                  @click="removeOption(index)"
-                >
-                  <X :size="16" />
-                </button>
-              </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">标题 <span class="required">*</span></label>
+              <input 
+                v-model="createForm.title" 
+                type="text" 
+                class="form-input" 
+                placeholder="请输入投票标题" 
+                required
+              />
             </div>
-            <button type="button" class="add-option-btn" @click="addOption">
-              <Plus :size="16" />
-              <span>添加选项</span>
-            </button>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">开始日期 <span class="required">*</span></label>
+              <label class="form-label">描述</label>
+              <textarea 
+                v-model="createForm.description" 
+                class="form-textarea" 
+                placeholder="请输入投票描述..."
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">开始时间 <span class="required">*</span></label>
               <input 
-                v-model="newVote.startDate" 
-                type="date" 
+                v-model="createForm.startTime" 
+                type="datetime-local" 
                 class="form-input" 
                 required
               />
             </div>
             <div class="form-group">
-              <label class="form-label">结束日期 <span class="required">*</span></label>
+              <label class="form-label">结束时间 <span class="required">*</span></label>
               <input 
-                v-model="newVote.endDate" 
-                type="date" 
+                v-model="createForm.endTime" 
+                type="datetime-local" 
                 class="form-input" 
                 required
               />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">投票选项 <span class="required">*</span></label>
+              <div class="options-list">
+                <div 
+                  v-for="(option, index) in createForm.options" 
+                  :key="index" 
+                  class="option-input-row"
+                >
+                  <input 
+                    v-model="createForm.options[index]" 
+                    type="text" 
+                    class="form-input" 
+                    :placeholder="'选项 ' + (index + 1)"
+                    required
+                  />
+                  <button 
+                    v-if="createForm.options.length > 2"
+                    type="button" 
+                    class="remove-option-btn"
+                    @click="removeOption(index)"
+                  >
+                    <X :size="16" />
+                  </button>
+                </div>
+              </div>
+              <button 
+                v-if="createForm.options.length < 6"
+                type="button" 
+                class="add-option-btn"
+                @click="addOption"
+              >
+                <Plus :size="16" />
+                <span>添加选项</span>
+              </button>
             </div>
           </div>
 
@@ -179,98 +256,198 @@
         </form>
       </div>
     </div>
+
+    <!-- 投票弹窗 -->
+    <div class="modal-overlay" v-if="showVoteModal" @click.self="closeVoteModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>{{ currentVote?.title }}</h3>
+          <button class="close-btn" @click="closeVoteModal">
+            <X :size="18" />
+          </button>
+        </div>
+        
+        <div class="vote-options" v-if="currentVote">
+          <div 
+            v-for="option in currentVote.options" 
+            :key="option.id"
+            :class="['vote-option', { selected: selectedOption === option.id }]"
+            @click="selectedOption = option.id"
+          >
+            <div class="option-radio">
+              <div :class="['radio-inner', { checked: selectedOption === option.id }]"></div>
+            </div>
+            <span>{{ option.text }}</span>
+          </div>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" @click="closeVoteModal">取消</button>
+          <button type="button" class="btn btn-primary" @click="submitVote">确认投票</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 详情弹窗 -->
+    <div class="modal-overlay" v-if="showDetailModal" @click.self="closeDetailModal">
+      <div class="modal-content detail-modal">
+        <div class="modal-header">
+          <h3>投票详情</h3>
+          <button class="close-btn" @click="closeDetailModal">
+            <X :size="18" />
+          </button>
+        </div>
+        
+        <div class="detail-body" v-if="selectedVote">
+          <div class="detail-section">
+            <h2>{{ selectedVote.title }}</h2>
+            <span :class="['status-badge', selectedVote.status.toLowerCase()]">
+              {{ selectedVote.status === 'ACTIVE' ? '进行中' : '已结束' }}
+            </span>
+          </div>
+
+          <div class="detail-section">
+            <p>{{ selectedVote.description }}</p>
+          </div>
+
+          <div class="detail-section">
+            <h4>投票信息</h4>
+            <div class="detail-meta">
+              <div class="meta-item">
+                <User :size="14" />
+                <span>创建者：{{ selectedVote.createdBy }}</span>
+              </div>
+              <div class="meta-item">
+                <Calendar :size="14" />
+                <span>时间：{{ formatDate(selectedVote.startTime) }} - {{ formatDate(selectedVote.endTime) }}</span>
+              </div>
+              <div class="meta-item">
+                <Users :size="14" />
+                <span>参与人数：{{ selectedVote.totalVotes }} 人</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <h4>投票结果</h4>
+            <div 
+              v-for="option in selectedVote.options" 
+              :key="option.id" 
+              class="option-row"
+            >
+              <div class="option-info">
+                <span class="option-text">{{ option.text }}</span>
+                <span class="option-count">{{ option.votes }} 票 ({{ getPercentage(selectedVote, option) }}%)</span>
+              </div>
+              <div class="progress-bar">
+                <div 
+                  class="progress-fill" 
+                  :style="{ width: getPercentage(selectedVote, option) + '%' }"
+                  :class="{ winning: isWinning(selectedVote, option) }"
+                ></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Plus, Users, Calendar, Eye, CheckCircle, Vote, X } from 'lucide-vue-next'
+import { ref, computed, onMounted, reactive } from 'vue'
+import {
+  Plus, Vote, Users, Calendar, CheckCircle, XCircle, Eye, X, User,
+  LayoutDashboard, Home, MessageSquare, Building2, Receipt, Shield, ChevronLeft, ChevronRight
+} from 'lucide-vue-next'
+import { governanceApi } from '../api'
 
-const filterStatus = ref('')
+const isCollapsed = ref(localStorage.getItem('sidebarCollapsed') === 'true')
+const activeMenu = ref('vote')
+const activeTab = ref('active')
 
-const votes = ref([
-  {
-    id: 1,
-    title: '关于小区绿化改造方案的投票',
-    description: '为提升小区居住环境，现对绿化改造方案进行投票，请各位业主积极参与。',
-    status: 'ONGOING',
-    startDate: '2026-06-01',
-    endDate: '2026-06-30',
-    participants: 156,
-    totalVotes: 156,
-    options: [
-      { id: 1, text: '方案A：增加草坪面积', votes: 78 },
-      { id: 2, text: '方案B：增加花卉种植', votes: 52 },
-      { id: 3, text: '方案C：保持现状', votes: 26 }
-    ]
-  },
-  {
-    id: 2,
-    title: '关于物业费调整的意见征集',
-    description: '根据小区运营成本变化，拟对物业费进行调整，现征求业主意见。',
-    status: 'ONGOING',
-    startDate: '2026-06-10',
-    endDate: '2026-07-10',
-    participants: 89,
-    totalVotes: 89,
-    options: [
-      { id: 1, text: '同意上调5%', votes: 45 },
-      { id: 2, text: '同意上调3%', votes: 28 },
-      { id: 3, text: '不同意调整', votes: 16 }
-    ]
-  },
-  {
-    id: 3,
-    title: '关于新增充电桩的投票',
-    description: '为满足业主电动车充电需求，拟在小区内增设充电桩设施。',
-    status: 'ENDED',
-    startDate: '2026-05-01',
-    endDate: '2026-05-31',
-    participants: 203,
-    totalVotes: 203,
-    options: [
-      { id: 1, text: '支持增设充电桩', votes: 178 },
-      { id: 2, text: '反对增设充电桩', votes: 25 }
-    ]
-  }
-])
+const menuItems = [
+  { path: '/', name: 'dashboard', label: '首页', icon: Home },
+  { path: '/ledger', name: 'ledger', label: '财务台账', icon: MessageSquare },
+  { path: '/vote', name: 'vote', label: '业主投票', icon: Vote },
+  { path: '/inquiry', name: 'inquiry', label: '业主质询', icon: MessageSquare },
+  { path: '/community', name: 'community', label: '小区管理', icon: Building2 },
+  { path: '/bill', name: 'bill', label: '账单管理', icon: Receipt },
+  { path: '/audit', name: 'audit', label: '审计日志', icon: Shield }
+]
 
-const newVote = ref({
+const votes = ref<any[]>([])
+const showCreateModal = ref(false)
+const showVoteModal = ref(false)
+const showDetailModal = ref(false)
+const currentVote = ref<any>(null)
+const selectedVote = ref<any>(null)
+const selectedOption = ref<number | null>(null)
+
+const createForm = reactive({
   title: '',
   description: '',
-  options: [
-    { id: 1, text: '' },
-    { id: 2, text: '' }
-  ],
-  startDate: '',
-  endDate: ''
+  startTime: '',
+  endTime: '',
+  options: ['', ''] as string[]
 })
-
-const showCreateModal = ref(false)
 
 const filteredVotes = computed(() => {
   return votes.value.filter(vote => {
-    if (!filterStatus.value) return true
-    return vote.status === filterStatus.value
+    if (activeTab.value === 'active') {
+      return vote.status === 'ACTIVE'
+    }
+    return vote.status === 'ENDED'
   })
 })
 
-const getPercentage = (votes: number, total: number) => {
-  if (total === 0) return 0
-  return Math.round((votes / total) * 100)
+const toggleSidebar = () => {
+  isCollapsed.value = !isCollapsed.value
+  localStorage.setItem('sidebarCollapsed', String(isCollapsed.value))
+}
+
+const handleMenuClick = (path: string, name: string) => {
+  activeMenu.value = name
+  window.location.href = path
+}
+
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
+const getPercentage = (vote: any, option: any) => {
+  if (vote.totalVotes === 0) return 0
+  return Math.round((option.votes / vote.totalVotes) * 100)
+}
+
+const isWinning = (vote: any, option: any) => {
+  const maxVotes = Math.max(...vote.options.map((o: any) => o.votes))
+  return option.votes === maxVotes && maxVotes > 0
+}
+
+const hasVoted = (vote: any) => {
+  const votedIds = JSON.parse(localStorage.getItem('votedIds') || '[]')
+  return votedIds.includes(vote.id)
+}
+
+const loadVotes = async () => {
+  try {
+    const response = await governanceApi.getAllVotes()
+    if (response.code === 0) {
+      votes.value = response.data
+    }
+  } catch (error) {
+    console.error('加载投票列表失败:', error)
+  }
 }
 
 const openCreateModal = () => {
-  newVote.value = {
-    title: '',
-    description: '',
-    options: [
-      { id: 1, text: '' },
-      { id: 2, text: '' }
-    ],
-    startDate: '',
-    endDate: ''
-  }
+  createForm.title = ''
+  createForm.description = ''
+  createForm.startTime = ''
+  createForm.endTime = ''
+  createForm.options = ['', '']
   showCreateModal.value = true
 }
 
@@ -279,65 +456,242 @@ const closeCreateModal = () => {
 }
 
 const addOption = () => {
-  newVote.value.options.push({
-    id: newVote.value.options.length + 1,
-    text: ''
-  })
+  if (createForm.options.length < 6) {
+    createForm.options.push('')
+  }
 }
 
 const removeOption = (index: number) => {
-  if (newVote.value.options.length > 2) {
-    newVote.value.options.splice(index, 1)
+  if (createForm.options.length > 2) {
+    createForm.options.splice(index, 1)
   }
 }
 
-const createVote = () => {
-  const validOptions = newVote.value.options.filter(o => o.text.trim())
-  if (validOptions.length < 2) {
-    alert('请至少添加两个投票选项')
+const createVote = async () => {
+  if (!createForm.title || createForm.options.filter(o => o.trim()).length < 2) {
+    alert('请填写投票标题和至少两个选项')
     return
   }
 
-  votes.value.unshift({
-    id: Math.max(...votes.value.map(v => v.id)) + 1,
-    title: newVote.value.title,
-    description: newVote.value.description,
-    status: 'ONGOING',
-    startDate: newVote.value.startDate,
-    endDate: newVote.value.endDate,
-    participants: 0,
-    totalVotes: 0,
-    options: validOptions.map((o, i) => ({ id: i + 1, text: o.text, votes: 0 }))
-  })
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const userId = user.id || 'admin'
 
-  alert('投票发起成功')
-  closeCreateModal()
+    const options = createForm.options.filter(o => o.trim()).map(text => ({ text }))
+
+    await governanceApi.createVote({
+      title: createForm.title,
+      description: createForm.description,
+      startTime: createForm.startTime,
+      endTime: createForm.endTime,
+      options,
+      createdBy: userId,
+      communityId: 1
+    })
+    alert('创建成功')
+    closeCreateModal()
+    await loadVotes()
+  } catch (error) {
+    console.error('创建投票失败:', error)
+    alert('创建失败，请重试')
+  }
 }
 
-const viewVote = (vote: any) => {
-  alert(`查看投票详情: ${vote.title}`)
+const openVoteModal = (vote: any) => {
+  currentVote.value = vote
+  selectedOption.value = null
+  showVoteModal.value = true
 }
 
-const voteNow = (vote: any) => {
-  alert(`参与投票: ${vote.title}`)
+const closeVoteModal = () => {
+  showVoteModal.value = false
+  currentVote.value = null
+  selectedOption.value = null
 }
+
+const submitVote = async () => {
+  if (!selectedOption.value || !currentVote.value) {
+    alert('请选择一个选项')
+    return
+  }
+
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const userId = user.id || 'admin'
+
+    await governanceApi.vote(currentVote.value.id, {
+      optionId: selectedOption.value,
+      votedBy: userId
+    })
+
+    const votedIds = JSON.parse(localStorage.getItem('votedIds') || '[]')
+    votedIds.push(currentVote.value.id)
+    localStorage.setItem('votedIds', JSON.stringify(votedIds))
+
+    alert('投票成功')
+    closeVoteModal()
+    await loadVotes()
+  } catch (error) {
+    console.error('投票失败:', error)
+    alert('投票失败，请重试')
+  }
+}
+
+const openDetail = (vote: any) => {
+  selectedVote.value = vote
+  showDetailModal.value = true
+}
+
+const closeDetailModal = () => {
+  showDetailModal.value = false
+  selectedVote.value = null
+}
+
+const endVote = async (voteId: number) => {
+  if (!confirm('确定要结束此投票吗？')) {
+    return
+  }
+
+  try {
+    await governanceApi.endVote(voteId)
+    alert('投票已结束')
+    await loadVotes()
+  } catch (error) {
+    console.error('结束投票失败:', error)
+    alert('操作失败，请重试')
+  }
+}
+
+onMounted(async () => {
+  await loadVotes()
+})
 </script>
 
 <style scoped>
 .vote-container {
-  padding: 24px;
+  display: flex;
+  min-height: 100vh;
+  background: #f8fafc;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-.page-header {
+.sidebar {
+  width: 220px;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 64px;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid #334155;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 10px;
+  margin-right: 12px;
+  color: #fff;
+}
+
+.logo-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 0;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 0 8px;
+}
+
+.nav-list li {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  margin: 4px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #94a3b8;
+}
+
+.nav-list li:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #f1f5f9;
+}
+
+.nav-list li.active {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%);
+  color: #60a5fa;
+}
+
+.nav-label {
+  margin-left: 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid #334155;
+}
+
+.collapse-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.top-header {
+  background: #ffffff;
+  padding: 16px 28px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .header-left h2 {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 600;
   color: #1e293b;
   margin: 0 0 4px 0;
@@ -369,27 +723,44 @@ const voteNow = (vote: any) => {
   box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
 }
 
-.filter-bar {
-  margin-bottom: 24px;
+.content-wrapper {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
 }
 
-.filter-select {
-  padding: 10px 16px;
+.tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: #fff;
   border: 2px solid #e2e8f0;
   border-radius: 8px;
-  font-size: 13px;
-  color: #334155;
-  background: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  color: #64748b;
   cursor: pointer;
-  outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.2s ease;
 }
 
-.filter-select:focus {
+.tab-btn:hover {
+  border-color: #cbd5e1;
+}
+
+.tab-btn.active {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   border-color: #3b82f6;
+  color: #fff;
 }
 
-.vote-grid {
+.vote-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   gap: 20px;
@@ -397,44 +768,26 @@ const voteNow = (vote: any) => {
 
 .vote-card {
   background: #fff;
-  border-radius: 16px;
-  padding: 24px;
+  border-radius: 14px;
+  padding: 20px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-  transition: all 0.2s ease;
 }
 
-.vote-card:hover {
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-}
-
-.vote-card.status-ended {
-  opacity: 0.75;
-}
-
-.vote-header {
+.card-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 12px;
-}
-
-.vote-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #1e293b;
-  flex: 1;
-  margin-right: 12px;
 }
 
 .status-badge {
   padding: 4px 12px;
-  border-radius: 20px;
+  border-radius: 6px;
   font-size: 12px;
   font-weight: 600;
-  flex-shrink: 0;
 }
 
-.status-badge.ongoing {
+.status-badge.active {
   background: rgba(16, 185, 129, 0.1);
   color: #10b981;
 }
@@ -444,40 +797,55 @@ const voteNow = (vote: any) => {
   color: #64748b;
 }
 
+.vote-id {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.vote-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+}
+
 .vote-description {
   font-size: 14px;
   color: #64748b;
   line-height: 1.6;
-  margin-bottom: 16px;
+  margin: 0 0 16px 0;
 }
 
 .vote-meta {
   display: flex;
-  gap: 20px;
-  margin-bottom: 20px;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 .meta-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  color: #64748b;
+  gap: 4px;
+  font-size: 12px;
+  color: #94a3b8;
 }
 
-.vote-progress {
-  margin-bottom: 20px;
-}
-
-.progress-item {
+.progress-section {
   margin-bottom: 16px;
 }
 
-.progress-item:last-child {
+.option-row {
+  margin-bottom: 12px;
+}
+
+.option-row:last-child {
   margin-bottom: 0;
 }
 
-.progress-header {
+.option-info {
   display: flex;
   justify-content: space-between;
   margin-bottom: 6px;
@@ -485,13 +853,13 @@ const voteNow = (vote: any) => {
 
 .option-text {
   font-size: 13px;
-  color: #334155;
+  color: #475569;
 }
 
-.option-percent {
+.option-count {
   font-size: 13px;
   font-weight: 600;
-  color: #3b82f6;
+  color: #334155;
 }
 
 .progress-bar {
@@ -503,61 +871,74 @@ const voteNow = (vote: any) => {
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%);
+  background: linear-gradient(90deg, #cbd5e1 0%, #94a3b8 100%);
   border-radius: 4px;
-  transition: width 0.5s ease;
+  transition: width 0.3s ease;
 }
 
-.option-count {
-  display: block;
-  font-size: 12px;
-  color: #94a3b8;
-  margin-top: 4px;
+.progress-fill.winning {
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
 }
 
-.vote-actions {
+.card-actions {
   display: flex;
-  gap: 12px;
-  padding-top: 16px;
-  border-top: 1px solid #f1f5f9;
+  gap: 10px;
 }
 
-.action-btn {
-  flex: 1;
+.btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 12px;
-  background: #f8fafc;
+  gap: 6px;
+  padding: 10px 16px;
   border: none;
   border-radius: 8px;
-  color: #64748b;
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.action-btn:hover {
-  background: #f1f5f9;
+.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
-.action-btn.primary {
+.btn-primary {
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: #fff;
 }
 
-.action-btn.primary:hover {
+.btn-primary:hover:not(:disabled) {
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
+.btn-secondary {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #e2e8f0;
+}
+
+.btn-outline {
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  color: #64748b;
+}
+
+.btn-outline:hover {
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
 .empty-state {
+  grid-column: 1 / -1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 80px 0;
+  padding: 60px 0;
   color: #94a3b8;
 }
 
@@ -586,6 +967,10 @@ const voteNow = (vote: any) => {
   max-width: 520px;
   max-height: 90vh;
   overflow-y: auto;
+}
+
+.detail-modal {
+  max-width: 600px;
 }
 
 .modal-header {
@@ -622,8 +1007,15 @@ const voteNow = (vote: any) => {
   padding: 24px;
 }
 
-.form-group {
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
   margin-bottom: 20px;
+}
+
+.form-row .form-group:first-child:last-child {
+  grid-column: 1 / -1;
 }
 
 .form-label {
@@ -653,6 +1045,10 @@ const voteNow = (vote: any) => {
   border-color: #3b82f6;
 }
 
+.form-input::placeholder {
+  color: #94a3b8;
+}
+
 .form-textarea {
   width: 100%;
   padding: 12px 16px;
@@ -672,23 +1068,20 @@ const voteNow = (vote: any) => {
 .options-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
-.option-row {
+.option-input-row {
   display: flex;
-  gap: 12px;
+  gap: 10px;
 }
 
-.option-input {
+.option-input-row .form-input {
   flex: 1;
 }
 
 .remove-option-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
+  padding: 0 12px;
   background: rgba(239, 68, 68, 0.1);
   border: none;
   border-radius: 8px;
@@ -704,30 +1097,21 @@ const voteNow = (vote: any) => {
 .add-option-btn {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 8px;
+  gap: 6px;
   margin-top: 12px;
-  padding: 12px;
-  background: #f8fafc;
-  border: 2px dashed #cbd5e1;
+  padding: 10px 16px;
+  background: transparent;
+  border: 2px dashed #e2e8f0;
   border-radius: 8px;
-  color: #64748b;
   font-size: 13px;
-  font-weight: 500;
+  color: #64748b;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .add-option-btn:hover {
-  background: #f1f5f9;
-  border-color: #3b82f6;
-  color: #3b82f6;
-}
-
-.form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 20px;
+  border-color: #cbd5e1;
+  color: #334155;
 }
 
 .modal-footer {
@@ -738,31 +1122,94 @@ const voteNow = (vote: any) => {
   border-top: 1px solid #f1f5f9;
 }
 
-.btn {
-  padding: 12px 24px;
-  border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
+.vote-options {
+  padding: 24px;
+}
+
+.vote-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
   cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 10px;
+}
+
+.vote-option:last-child {
+  margin-bottom: 0;
+}
+
+.vote-option:hover {
+  border-color: #cbd5e1;
+}
+
+.vote-option.selected {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.option-radio {
+  width: 22px;
+  height: 22px;
+  border: 2px solid #cbd5e1;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: all 0.2s;
 }
 
-.btn-secondary {
-  background: #f1f5f9;
+.vote-option.selected .option-radio {
+  border-color: #3b82f6;
+}
+
+.radio-inner {
+  width: 10px;
+  height: 10px;
+  background: transparent;
+  border-radius: 50%;
+  transition: all 0.2s;
+}
+
+.vote-option.selected .radio-inner {
+  background: #3b82f6;
+}
+
+.detail-body {
+  padding: 24px;
+}
+
+.detail-section {
+  margin-bottom: 24px;
+}
+
+.detail-section h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+}
+
+.detail-section h4 {
+  font-size: 14px;
+  font-weight: 600;
   color: #64748b;
+  margin: 0 0 12px 0;
 }
 
-.btn-secondary:hover {
-  background: #e2e8f0;
+.detail-section p {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0;
 }
 
-.btn-primary {
-  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  color: #fff;
-}
-
-.btn-primary:hover {
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+.detail-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
 }
 </style>

@@ -1,268 +1,975 @@
-<script setup lang="ts">import { ref } from 'vue';
-import { ElMessage, ElMessageBox, ElTable, ElTableColumn, ElButton, ElDialog, ElForm, ElFormItem, ElInput } from 'element-plus';
-const statusFilter = ref('');
-const inquiries = ref([
- { id: 1, title: '关于6月份物业费明细的质询', content: '我想了解6月份物业费的具体支出明细，特别是安保服务和设备维保的费用。', author: '张业主', authorId: 'U001', status: 'REPLIED', createdAt: '2026-06-03 10:30', repliedAt: '2026-06-04 14:20', replyContent: '您好，6月份安保服务费用为18万元，设备维保费用为13万元，具体明细已公示在财务公示页面。' },
- { id: 2, title: '关于小区电梯维保的质询', content: '请问电梯维保的具体时间安排是怎样的？', author: '李业主', authorId: 'U002', status: 'PENDING', createdAt: '2026-06-05 09:00' },
- { id: 3, title: '关于绿化养护费用的质询', content: '绿化养护费用是否包含在物业费中？', author: '王业主', authorId: 'U003', status: 'REPLIED', createdAt: '2026-06-02 15:00', repliedAt: '2026-06-03 10:00', replyContent: '是的，绿化养护费用包含在物业费中，每月预算5万元。' },
- { id: 4, title: '关于公共区域照明的质询', content: '建议增加公共区域的照明设施，特别是地下车库部分。', author: '赵业主', authorId: 'U004', status: 'CLOSED', createdAt: '2026-05-28 11:00', repliedAt: '2026-05-29 14:00', replyContent: '感谢您的建议，我们已安排在地下车库增加照明设施，预计本月底完成。', closedAt: '2026-06-01' }
-]);
-const showReplyModal = ref(false);
-const currentInquiry = ref<any>(null);
-const replyContent = ref('');
-const openReplyModal = (inquiry: any) => {
- currentInquiry.value = inquiry;
- replyContent.value = '';
- showReplyModal.value = true;
-};
-const closeReplyModal = () => {
- showReplyModal.value = false;
- currentInquiry.value = null;
-};
-const submitReply = () => {
- if (!replyContent.value.trim()) {
- ElMessage.warning('请输入回复内容');
- return;
- }
- const index = inquiries.value.findIndex(i => i.id === currentInquiry.value.id);
- if (index !== -1) {
- inquiries.value[index] = {
- ...inquiries.value[index],
- status: 'REPLIED',
- replyContent: replyContent.value,
- repliedAt: new Date().toLocaleString('zh-CN')
- };
- }
- ElMessage.success('回复成功');
- closeReplyModal();
-};
-const filterForm = ref({ replyContent: '' });
-const closeInquiry = (id: number) => {
- ElMessageBox.confirm('确定要关闭这个质询吗？', '提示', {
- confirmButtonText: '确定',
- cancelButtonText: '取消',
- type: 'warning'
- }).then(() => {
- const index = inquiries.value.findIndex(i => i.id === id);
- if (index !== -1) {
- inquiries.value[index].status = 'CLOSED';
- inquiries.value[index].closedAt = new Date().toLocaleString('zh-CN');
- }
- ElMessage.success('已关闭');
- }).catch(() => {});
-};
-const deleteInquiry = (id: number) => {
- ElMessageBox.confirm('确定要删除这个质询吗？', '提示', {
- confirmButtonText: '确定',
- cancelButtonText: '取消',
- type: 'warning'
- }).then(() => {
- inquiries.value = inquiries.value.filter(i => i.id !== id);
- ElMessage.success('删除成功');
- }).catch(() => {});
-};
-const getStatusText = (status: string) => {
- const statusMap: Record<string, string> = {
- PENDING: '待回复',
- REPLIED: '已回复',
- CLOSED: '已关闭',
- REJECTED: '已驳回'
- };
- return statusMap[status] || status;
-};
-const getStatusClass = (status: string) => {
- const classMap: Record<string, string> = {
- PENDING: 'status-pending',
- REPLIED: 'status-replied',
- CLOSED: 'status-closed',
- REJECTED: 'status-rejected'
- };
- return classMap[status] || '';
-};
-</script>
-
 <template>
   <div class="inquiry-container">
-    <div class="page-header">
-      <h2>业主质询管理</h2>
-      <div class="filter-bar">
-        <el-select v-model="statusFilter" placeholder="全部状态">
-          <el-option label="全部" value="" />
-          <el-option label="待回复" value="PENDING" />
-          <el-option label="已回复" value="REPLIED" />
-          <el-option label="已关闭" value="CLOSED" />
-        </el-select>
+    <aside class="sidebar" :class="{ collapsed: isCollapsed }">
+      <div class="logo-area">
+        <div class="logo">
+          <LayoutDashboard :size="28" />
+        </div>
+        <span v-if="!isCollapsed" class="logo-text">物业透明化系统</span>
+      </div>
+      
+      <nav class="sidebar-nav">
+        <ul class="nav-list">
+          <li 
+            v-for="item in menuItems" 
+            :key="item.path"
+            :class="{ active: activeMenu === item.name }"
+            @click="handleMenuClick(item.path, item.name)"
+          >
+            <component :is="item.icon" :size="18" />
+            <span v-if="!isCollapsed" class="nav-label">{{ item.label }}</span>
+          </li>
+        </ul>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="collapse-btn" @click="toggleSidebar">
+          <ChevronLeft v-if="!isCollapsed" :size="18" />
+          <ChevronRight v-else :size="18" />
+        </button>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <header class="top-header">
+        <div class="header-left">
+          <h2>业主质询</h2>
+          <p class="page-subtitle">处理和回复业主提出的质询问题</p>
+        </div>
+        <button class="primary-btn" @click="openModal()">
+          <Plus :size="18" />
+          <span>新建质询</span>
+        </button>
+      </header>
+
+      <div class="content-wrapper">
+        <div class="stats-summary">
+          <div class="summary-item">
+            <div class="summary-icon pending-icon">
+              <Clock :size="20" />
+            </div>
+            <div class="summary-content">
+              <div class="summary-label">待处理</div>
+              <div class="summary-value">{{ pendingCount }}</div>
+            </div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-icon processing-icon">
+              <MessageSquare :size="20" />
+            </div>
+            <div class="summary-content">
+              <div class="summary-label">处理中</div>
+              <div class="summary-value">{{ processingCount }}</div>
+            </div>
+          </div>
+          <div class="summary-item">
+            <div class="summary-icon resolved-icon">
+              <CheckCircle :size="20" />
+            </div>
+            <div class="summary-content">
+              <div class="summary-label">已解决</div>
+              <div class="summary-value">{{ resolvedCount }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="filter-bar">
+          <select class="filter-select" v-model="statusFilter" @change="loadInquiries">
+            <option value="">全部状态</option>
+            <option value="PENDING">待处理</option>
+            <option value="PROCESSING">处理中</option>
+            <option value="RESOLVED">已解决</option>
+          </select>
+          <input 
+            type="text" 
+            class="search-input" 
+            v-model="searchKeyword" 
+            placeholder="搜索质询标题..."
+            @keyup.enter="loadInquiries"
+          />
+        </div>
+
+        <div class="inquiry-list">
+          <div 
+            v-for="inquiry in filteredInquiries" 
+            :key="inquiry.id" 
+            class="inquiry-card"
+            @click="openDetail(inquiry)"
+          >
+            <div class="card-header">
+              <span :class="['status-badge', inquiry.status.toLowerCase()]">
+                {{ getStatusLabel(inquiry.status) }}
+              </span>
+              <span class="inquiry-id">#{{ inquiry.id }}</span>
+            </div>
+            <h3 class="inquiry-title">{{ inquiry.title }}</h3>
+            <p class="inquiry-content">{{ truncateContent(inquiry.content) }}</p>
+            <div class="card-footer">
+              <div class="meta-item">
+                <User :size="14" />
+                <span>{{ inquiry.createdBy }}</span>
+              </div>
+              <div class="meta-item">
+                <Calendar :size="14" />
+                <span>{{ formatDate(inquiry.createdAt) }}</span>
+              </div>
+              <div class="meta-item" v-if="inquiry.repliedAt">
+                <MessageCircle :size="14" />
+                <span>{{ formatDate(inquiry.repliedAt) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="empty-state" v-if="filteredInquiries.length === 0">
+            <MessageSquare :size="48" />
+            <p>暂无质询记录</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 新建质询弹窗 -->
+    <div class="modal-overlay" v-if="showModal" @click.self="closeModal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>新建质询</h3>
+          <button class="close-btn" @click="closeModal">
+            <X :size="18" />
+          </button>
+        </div>
+        
+        <form class="modal-form" @submit.prevent="submitInquiry">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">标题 <span class="required">*</span></label>
+              <input 
+                v-model="formData.title" 
+                type="text" 
+                class="form-input" 
+                placeholder="请输入质询标题" 
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">内容 <span class="required">*</span></label>
+              <textarea 
+                v-model="formData.content" 
+                class="form-textarea" 
+                placeholder="请详细描述您的问题..."
+                rows="6"
+                required
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" @click="closeModal">取消</button>
+            <button type="submit" class="btn btn-primary">提交质询</button>
+          </div>
+        </form>
       </div>
     </div>
 
-    <el-card class="data-card">
-      <el-table :data="inquiries" border stripe>
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="title" label="质询标题" min-width="200" />
-        <el-table-column prop="author" label="质询人" width="100" />
-        <el-table-column 
-          prop="status" 
-          label="状态" 
-          width="100"
-        >
-          <template #default="scope">
-            <span :class="getStatusClass(scope.row.status)">
-              {{ getStatusText(scope.row.status) }}
-            </span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createdAt" label="质询时间" width="160" />
-        <el-table-column label="回复内容" min-width="200">
-          <template #default="scope">
-            <div v-if="scope.row.replyContent" class="reply-preview">{{ scope.row.replyContent }}</div>
-            <span v-else class="no-reply">暂无回复</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" width="200">
-          <template #default="scope">
-            <el-button 
-              v-if="scope.row.status === 'PENDING'"
-              type="primary" 
-              icon="Reply" 
-              size="small" 
-              @click="openReplyModal(scope.row)"
-            >回复</el-button>
-            <el-button 
-              v-if="scope.row.status === 'REPLIED'"
-              type="success" 
-              icon="Check" 
-              size="small"
-            >已回复</el-button>
-            <el-button 
-              v-if="scope.row.status !== 'CLOSED'"
-              type="warning" 
-              icon="X" 
-              size="small" 
-              @click="closeInquiry(scope.row.id)"
-            >关闭</el-button>
-            <el-button type="text" icon="Trash2" size="small" class="delete-btn" @click="deleteInquiry(scope.row.id)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
+    <!-- 详情弹窗 -->
+    <div class="modal-overlay" v-if="showDetail" @click.self="closeDetail">
+      <div class="modal-content detail-modal">
+        <div class="modal-header">
+          <h3>质询详情</h3>
+          <button class="close-btn" @click="closeDetail">
+            <X :size="18" />
+          </button>
+        </div>
+        
+        <div class="detail-body" v-if="selectedInquiry">
+          <div class="detail-section">
+            <div class="detail-header">
+              <h2>{{ selectedInquiry.title }}</h2>
+              <span :class="['status-badge', selectedInquiry.status.toLowerCase()]">
+                {{ getStatusLabel(selectedInquiry.status) }}
+              </span>
+            </div>
+            <div class="detail-meta">
+              <div class="meta-item">
+                <User :size="14" />
+                <span>发起者：{{ selectedInquiry.createdBy }}</span>
+              </div>
+              <div class="meta-item">
+                <Calendar :size="14" />
+                <span>创建时间：{{ formatDate(selectedInquiry.createdAt) }}</span>
+              </div>
+            </div>
+          </div>
 
-    <!-- 回复弹窗 -->
-    <el-dialog title="回复质询" :visible="showReplyModal" @close="closeReplyModal" width="500px">
-      <div v-if="currentInquiry" class="inquiry-detail">
-        <h4>{{ currentInquiry.title }}</h4>
-        <p class="inquiry-content">{{ currentInquiry.content }}</p>
-        <p class="inquiry-meta">质询人：{{ currentInquiry.author }} | {{ currentInquiry.createdAt }}</p>
+          <div class="detail-section">
+            <h4>质询内容</h4>
+            <p class="detail-content">{{ selectedInquiry.content }}</p>
+          </div>
+
+          <div class="detail-section" v-if="selectedInquiry.reply">
+            <h4>回复内容</h4>
+            <p class="detail-content reply-content">{{ selectedInquiry.reply }}</p>
+            <div class="detail-meta">
+              <div class="meta-item">
+                <User :size="14" />
+                <span>回复者：{{ selectedInquiry.repliedBy }}</span>
+              </div>
+              <div class="meta-item">
+                <Calendar :size="14" />
+                <span>回复时间：{{ formatDate(selectedInquiry.repliedAt) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="reply-section" v-if="selectedInquiry.status !== 'RESOLVED'">
+            <h4>回复质询</h4>
+            <textarea 
+              v-model="replyContent" 
+              class="form-textarea" 
+              placeholder="请输入回复内容..."
+              rows="4"
+            ></textarea>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" @click="closeDetail">关闭</button>
+              <button type="button" class="btn btn-primary" @click="submitReply">提交回复</button>
+            </div>
+          </div>
+        </div>
       </div>
-      
-      <el-form :model="filterForm" label-width="60px" style="margin-top: 20px;">
-        <el-form-item label="回复">
-          <el-input v-model="replyContent" type="textarea" :rows="4" placeholder="请输入回复内容" />
-        </el-form-item>
-      </el-form>
-      
-      <template #footer>
-        <el-button @click="closeReplyModal">取消</el-button>
-        <el-button type="primary" @click="submitReply">发送回复</el-button>
-      </template>
-    </el-dialog>
+    </div>
   </div>
 </template>
 
-<style scoped>
-.inquiry-container {
-  padding: 24px;
+<script setup lang="ts">
+import { ref, computed, onMounted, reactive } from 'vue'
+import {
+  Plus, MessageSquare, MessageCircle, User, Calendar, Clock, CheckCircle, X,
+  LayoutDashboard, Home, Vote, Building2, Receipt, Shield, ChevronLeft, ChevronRight
+} from 'lucide-vue-next'
+import { governanceApi } from '../api'
+
+const isCollapsed = ref(localStorage.getItem('sidebarCollapsed') === 'true')
+const activeMenu = ref('inquiry')
+
+const menuItems = [
+  { path: '/', name: 'dashboard', label: '首页', icon: Home },
+  { path: '/ledger', name: 'ledger', label: '财务台账', icon: MessageSquare },
+  { path: '/vote', name: 'vote', label: '业主投票', icon: Vote },
+  { path: '/inquiry', name: 'inquiry', label: '业主质询', icon: MessageSquare },
+  { path: '/community', name: 'community', label: '小区管理', icon: Building2 },
+  { path: '/bill', name: 'bill', label: '账单管理', icon: Receipt },
+  { path: '/audit', name: 'audit', label: '审计日志', icon: Shield }
+]
+
+const inquiries = ref<any[]>([])
+const showModal = ref(false)
+const showDetail = ref(false)
+const selectedInquiry = ref<any>(null)
+const replyContent = ref('')
+const statusFilter = ref('')
+const searchKeyword = ref('')
+
+const formData = reactive({
+  title: '',
+  content: ''
+})
+
+const pendingCount = computed(() => inquiries.value.filter(i => i.status === 'PENDING').length)
+const processingCount = computed(() => inquiries.value.filter(i => i.status === 'PROCESSING').length)
+const resolvedCount = computed(() => inquiries.value.filter(i => i.status === 'RESOLVED').length)
+
+const filteredInquiries = computed(() => {
+  return inquiries.value.filter(inquiry => {
+    const statusMatch = !statusFilter.value || inquiry.status === statusFilter.value
+    const keywordMatch = !searchKeyword.value || 
+      inquiry.title.toLowerCase().includes(searchKeyword.value.toLowerCase()) ||
+      inquiry.content.toLowerCase().includes(searchKeyword.value.toLowerCase())
+    return statusMatch && keywordMatch
+  })
+})
+
+const toggleSidebar = () => {
+  isCollapsed.value = !isCollapsed.value
+  localStorage.setItem('sidebarCollapsed', String(isCollapsed.value))
 }
 
-.page-header {
+const handleMenuClick = (path: string, name: string) => {
+  activeMenu.value = name
+  window.location.href = path
+}
+
+const getStatusLabel = (status: string) => {
+  const statusMap: Record<string, string> = {
+    PENDING: '待处理',
+    PROCESSING: '处理中',
+    RESOLVED: '已解决'
+  }
+  return statusMap[status] || status
+}
+
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
+const truncateContent = (content: string) => {
+  return content.length > 100 ? content.substring(0, 100) + '...' : content
+}
+
+const loadInquiries = async () => {
+  try {
+    const response = await governanceApi.getAllInquiries()
+    if (response.code === 0) {
+      inquiries.value = response.data
+    }
+  } catch (error) {
+    console.error('加载质询列表失败:', error)
+  }
+}
+
+const openModal = () => {
+  formData.title = ''
+  formData.content = ''
+  showModal.value = true
+}
+
+const closeModal = () => {
+  showModal.value = false
+}
+
+const submitInquiry = async () => {
+  if (!formData.title || !formData.content) {
+    alert('请填写完整信息')
+    return
+  }
+
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const userId = user.id || 'admin'
+
+    await governanceApi.createInquiry({
+      title: formData.title,
+      content: formData.content,
+      createdBy: userId,
+      communityId: 1
+    })
+    alert('提交成功')
+    closeModal()
+    await loadInquiries()
+  } catch (error) {
+    console.error('提交失败:', error)
+    alert('提交失败，请重试')
+  }
+}
+
+const openDetail = (inquiry: any) => {
+  selectedInquiry.value = inquiry
+  replyContent.value = ''
+  showDetail.value = true
+}
+
+const closeDetail = () => {
+  showDetail.value = false
+  selectedInquiry.value = null
+  replyContent.value = ''
+}
+
+const submitReply = async () => {
+  if (!replyContent.value.trim()) {
+    alert('请输入回复内容')
+    return
+  }
+
+  if (!selectedInquiry.value) return
+
+  try {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    const userId = user.id || 'admin'
+
+    await governanceApi.replyInquiry(selectedInquiry.value.id, {
+      reply: replyContent.value,
+      repliedBy: userId
+    })
+    alert('回复成功')
+    closeDetail()
+    await loadInquiries()
+  } catch (error) {
+    console.error('回复失败:', error)
+    alert('回复失败，请重试')
+  }
+}
+
+onMounted(async () => {
+  await loadInquiries()
+})
+</script>
+
+<style scoped>
+.inquiry-container {
+  display: flex;
+  min-height: 100vh;
+  background: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.sidebar {
+  width: 220px;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  color: #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 64px;
+}
+
+.logo-area {
+  display: flex;
+  align-items: center;
+  padding: 24px;
+  border-bottom: 1px solid #334155;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 10px;
+  margin-right: 12px;
+  color: #fff;
+}
+
+.logo-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.sidebar-nav {
+  flex: 1;
+  padding: 16px 0;
+}
+
+.nav-list {
+  list-style: none;
+  padding: 0 8px;
+}
+
+.nav-list li {
+  display: flex;
+  align-items: center;
+  padding: 12px 16px;
+  margin: 4px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #94a3b8;
+}
+
+.nav-list li:hover {
+  background: rgba(59, 130, 246, 0.1);
+  color: #f1f5f9;
+}
+
+.nav-list li.active {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.2) 0%, rgba(37, 99, 235, 0.15) 100%);
+  color: #60a5fa;
+}
+
+.nav-label {
+  margin-left: 12px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.sidebar-footer {
+  padding: 16px;
+  border-top: 1px solid #334155;
+}
+
+.collapse-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid #475569;
+  border-radius: 8px;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.collapse-btn:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.top-header {
+  background: #ffffff;
+  padding: 16px 28px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.header-left h2 {
+  font-size: 20px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 4px 0;
+}
+
+.page-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+.primary-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.primary-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.3);
+}
+
+.content-wrapper {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.stats-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
   margin-bottom: 24px;
 }
 
-.page-header h2 {
-  margin: 0;
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.summary-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.pending-icon {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.processing-icon {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.resolved-icon {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.summary-label {
+  font-size: 13px;
+  color: #64748b;
+  margin-bottom: 4px;
+}
+
+.summary-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e293b;
 }
 
 .filter-bar {
   display: flex;
   gap: 12px;
+  margin-bottom: 20px;
 }
 
-.data-card {
-  min-height: 400px;
-}
-
-.status-pending {
-  background: #fff7e6;
-  color: #fa8c16;
-  padding: 4px 12px;
+.filter-select {
+  padding: 10px 16px;
+  border: 2px solid #e2e8f0;
   border-radius: 8px;
-  font-size: 12px;
-}
-
-.status-replied {
-  background: #f6ffed;
-  color: #52c41a;
-  padding: 4px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-}
-
-.status-closed {
-  background: #f5f5f5;
-  color: #999;
-  padding: 4px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-}
-
-.status-rejected {
-  background: #fff2f0;
-  color: #f5222d;
-  padding: 4px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-}
-
-.reply-preview {
   font-size: 13px;
-  color: #666;
-  line-height: 1.5;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  color: #334155;
+  background: #fff;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
 }
 
-.no-reply {
-  color: #999;
-  font-size: 13px;
+.filter-select:focus {
+  border-color: #3b82f6;
 }
 
-.inquiry-detail {
-  padding: 16px;
-  background: #fafafa;
+.search-input {
+  padding: 10px 16px;
+  border: 2px solid #e2e8f0;
   border-radius: 8px;
+  font-size: 13px;
+  color: #334155;
+  outline: none;
+  transition: border-color 0.2s;
+  min-width: 200px;
 }
 
-.inquiry-detail h4 {
-  margin: 0 0 12px;
+.search-input:focus {
+  border-color: #3b82f6;
+}
+
+.search-input::placeholder {
+  color: #94a3b8;
+}
+
+.inquiry-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 20px;
+}
+
+.inquiry-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.inquiry-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.status-badge.pending {
+  background: rgba(245, 158, 11, 0.1);
+  color: #f59e0b;
+}
+
+.status-badge.processing {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.status-badge.resolved {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+.inquiry-id {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.inquiry-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 8px 0;
+  line-height: 1.4;
 }
 
 .inquiry-content {
-  margin: 0 0 12px;
-  color: #666;
-  line-height: 1.5;
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.6;
+  margin: 0 0 16px 0;
 }
 
-.inquiry-meta {
+.card-footer {
+  display: flex;
+  gap: 16px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.empty-state {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 0;
+  color: #94a3b8;
+}
+
+.empty-state p {
+  margin-top: 12px;
+  font-size: 14px;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.detail-modal {
+  max-width: 600px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.modal-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
   margin: 0;
-  font-size: 13px;
-  color: #999;
 }
 
-.delete-btn {
-  color: #f5222d;
+.close-btn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.close-btn:hover {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.modal-form {
+  padding: 24px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.form-label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.required {
+  color: #ef4444;
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #334155;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-input:focus {
+  border-color: #3b82f6;
+}
+
+.form-input::placeholder {
+  color: #94a3b8;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #334155;
+  resize: vertical;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.form-textarea:focus {
+  border-color: #3b82f6;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.btn-secondary:hover {
+  background: #e2e8f0;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: #fff;
+}
+
+.btn-primary:hover {
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.detail-body {
+  padding: 24px;
+}
+
+.detail-section {
+  margin-bottom: 24px;
+}
+
+.detail-section h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  margin: 0 0 12px 0;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.detail-header h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.detail-meta {
+  display: flex;
+  gap: 20px;
+  padding-top: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.detail-content {
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.8;
+  margin: 0;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 10px;
+}
+
+.reply-content {
+  background: rgba(16, 185, 129, 0.05);
+  border-left: 4px solid #10b981;
+}
+
+.reply-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.reply-section h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 12px 0;
 }
 </style>

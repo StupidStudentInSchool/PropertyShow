@@ -37,8 +37,8 @@
         </div>
         <div class="header-right">
           <div class="user-section">
-            <span class="user-name">{{ username }}</span>
-            <span class="user-role">管理员</span>
+            <span class="user-name">{{ user?.name || user?.username }}</span>
+            <span class="user-role">{{ user?.role === 'ADMIN' ? '管理员' : user?.role === 'PROPERTY_MANAGER' ? '物业人员' : '业主' }}</span>
           </div>
           <button class="logout-btn" @click="handleLogout">
             <LogOut :size="16" />
@@ -48,7 +48,6 @@
       </header>
 
       <div class="content-wrapper">
-        <!-- 统计卡片 -->
         <div class="stats-grid">
           <div v-for="stat in stats" :key="stat.title" class="stat-card">
             <div class="stat-icon-wrapper" :style="{ background: stat.bgColor }">
@@ -67,7 +66,6 @@
         </div>
 
         <div class="content-grid">
-          <!-- 最近财务记录 -->
           <div class="data-card">
             <div class="card-header">
               <h3 class="card-title">
@@ -98,11 +96,11 @@
                         {{ entry.type === 'INCOME' ? '收入' : '支出' }}
                       </span>
                     </td>
-                    <td>{{ entry.category }}</td>
+                    <td>{{ getCategoryLabel(entry.category) }}</td>
                     <td :class="entry.type === 'INCOME' ? 'text-success' : 'text-danger'">
-                      {{ entry.type === 'INCOME' ? '+' : '-' }}{{ entry.amount }}
+                      {{ entry.type === 'INCOME' ? '+' : '-' }}¥{{ formatAmount(entry.amount) }}
                     </td>
-                    <td class="text-muted">{{ entry.date }}</td>
+                    <td class="text-muted">{{ formatDate(entry.occurredAt) }}</td>
                   </tr>
                 </tbody>
               </table>
@@ -110,7 +108,6 @@
           </div>
 
           <div class="side-panel">
-            <!-- 待处理质询 -->
             <div class="data-card">
               <div class="card-header">
                 <h3 class="card-title">
@@ -130,17 +127,16 @@
                     <span class="inquiry-title">{{ item.title }}</span>
                   </div>
                   <div class="inquiry-meta">
-                    <span class="inquiry-author">{{ item.author }}</span>
+                    <span class="inquiry-author">{{ item.authorName }}</span>
                     <span :class="['inquiry-status', item.status.toLowerCase()]">
-                      {{ item.status === 'PENDING' ? '待回复' : '已回复' }}
+                      {{ getStatusLabel(item.status) }}
                     </span>
                   </div>
-                  <div class="inquiry-date">{{ item.date }}</div>
+                  <div class="inquiry-date">{{ formatDate(item.createdAt) }}</div>
                 </div>
               </div>
             </div>
 
-            <!-- 快捷操作 -->
             <div class="data-card quick-actions-card">
               <div class="card-header">
                 <h3 class="card-title">
@@ -172,7 +168,6 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import axios from 'axios'
 import {
   LayoutDashboard,
   Home,
@@ -189,13 +184,16 @@ import {
   TrendingDown,
   MessageCircle,
   Plus,
-  Zap
+  Zap,
+  AlertCircle
 } from 'lucide-vue-next'
+import { ledgerApi, governanceApi, authApi } from '../api'
+import type { User } from '../stores/user'
 
 const savedCollapsed = localStorage.getItem('sidebarCollapsed') === 'true'
 const isCollapsed = ref(savedCollapsed)
 const activeMenu = ref('dashboard')
-const username = ref('')
+const user = ref<User | null>(null)
 
 const menuItems = [
   { path: '/', name: 'dashboard', label: '首页', icon: Home },
@@ -210,8 +208,8 @@ const menuItems = [
 const stats = ref([
   { 
     title: '本月收入', 
-    value: '¥1,250,000', 
-    change: '+12.5%', 
+    value: '¥0', 
+    change: '+0%', 
     changeType: 'positive',
     icon: TrendingUp, 
     iconColor: '#fff', 
@@ -219,8 +217,8 @@ const stats = ref([
   },
   { 
     title: '本月支出', 
-    value: '¥980,000', 
-    change: '-5.2%', 
+    value: '¥0', 
+    change: '-0%', 
     changeType: 'negative',
     icon: TrendingDown, 
     iconColor: '#fff', 
@@ -228,8 +226,8 @@ const stats = ref([
   },
   { 
     title: '小区数量', 
-    value: '12', 
-    change: '+2', 
+    value: '0', 
+    change: '+0', 
     changeType: 'positive',
     icon: Building2, 
     iconColor: '#fff', 
@@ -237,8 +235,8 @@ const stats = ref([
   },
   { 
     title: '待处理质询', 
-    value: '5', 
-    change: '+1', 
+    value: '0', 
+    change: '+0', 
     changeType: 'positive',
     icon: AlertCircle, 
     iconColor: '#fff', 
@@ -246,25 +244,46 @@ const stats = ref([
   }
 ])
 
-import { AlertCircle } from 'lucide-vue-next'
-
-const recentEntries = ref([
-  { id: 1, type: 'INCOME', category: '物业费收入', amount: '¥850,000', date: '2026-06-15' },
-  { id: 2, type: 'EXPENSE', category: '人员工资', amount: '¥420,000', date: '2026-06-01' },
-  { id: 3, type: 'INCOME', category: '停车费收入', amount: '¥280,000', date: '2026-06-20' },
-  { id: 4, type: 'EXPENSE', category: '保洁服务', amount: '¥150,000', date: '2026-06-10' },
-  { id: 5, type: 'EXPENSE', category: '设备维保', amount: '¥130,000', date: '2026-06-18' }
-])
-
-const pendingInquiries = ref([
-  { id: 1, title: '关于物业费明细的质询', author: '张业主', date: '2026-06-05', status: 'PENDING' },
-  { id: 2, title: '关于电梯维保时间的质询', author: '李业主', date: '2026-06-04', status: 'PENDING' },
-  { id: 3, title: '关于绿化养护的质询', author: '王业主', date: '2026-06-03', status: 'REPLIED' }
-])
+const recentEntries = ref<any[]>([])
+const pendingInquiries = ref<any[]>([])
 
 const pendingCount = computed(() => {
   return pendingInquiries.value.filter(item => item.status === 'PENDING').length
 })
+
+const categoryMap: Record<string, string> = {
+  PROPERTY_FEE: '物业费',
+  PARKING_FEE: '停车费',
+  ADVERTISING: '广告费',
+  OTHER_INCOME: '其他收入',
+  STAFF_SALARY: '人员工资',
+  CLEANING: '保洁服务',
+  MAINTENANCE: '设备维保',
+  UTILITIES: '水电费用',
+  OTHER_EXPENSE: '其他支出',
+}
+
+const getCategoryLabel = (category: string) => {
+  return categoryMap[category] || category
+}
+
+const getStatusLabel = (status: string) => {
+  const statusMap: Record<string, string> = {
+    PENDING: '待回复',
+    REPLIED: '已回复',
+    CLOSED: '已关闭'
+  }
+  return statusMap[status] || status
+}
+
+const formatAmount = (amount: number) => {
+  return amount.toLocaleString()
+}
+
+const formatDate = (dateStr: string) => {
+  const date = new Date(dateStr)
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+}
 
 const toggleSidebar = () => {
   isCollapsed.value = !isCollapsed.value
@@ -282,28 +301,66 @@ const handleNavigate = (path: string) => {
 
 const handleLogout = () => {
   localStorage.removeItem('token')
-  localStorage.removeItem('username')
-  localStorage.removeItem('role')
+  localStorage.removeItem('user')
   window.location.href = '/login'
 }
 
-onMounted(() => {
-  const savedUsername = localStorage.getItem('username')
-  if (savedUsername) {
-    username.value = savedUsername
-  }
-  
-  axios.get('/api/v1/auth/me', {
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`
+const loadUserData = async () => {
+  try {
+    const response = await authApi.me()
+    if (response.code === 0) {
+      user.value = response.data
+      localStorage.setItem('user', JSON.stringify(response.data))
     }
-  }).then(response => {
-    if (response.data.code === 0) {
-      username.value = response.data.data.username
-    }
-  }).catch(() => {
+  } catch (error) {
     console.log('获取用户信息失败')
-  })
+    const savedUser = localStorage.getItem('user')
+    if (savedUser) {
+      user.value = JSON.parse(savedUser)
+    }
+  }
+}
+
+const loadStatistics = async () => {
+  try {
+    const response = await ledgerApi.getStatistics()
+    if (response.code === 0) {
+      const data = response.data
+      stats.value[0].value = `¥${data.totalIncome?.toLocaleString() || '0'}`
+      stats.value[1].value = `¥${data.totalExpense?.toLocaleString() || '0'}`
+    }
+  } catch (error) {
+    console.error('加载统计数据失败:', error)
+  }
+}
+
+const loadRecentEntries = async () => {
+  try {
+    const response = await ledgerApi.getRecent(5)
+    if (response.code === 0) {
+      recentEntries.value = response.data
+    }
+  } catch (error) {
+    console.error('加载财务记录失败:', error)
+  }
+}
+
+const loadPendingInquiries = async () => {
+  try {
+    const response = await governanceApi.getAllInquiries(undefined, 'PENDING')
+    if (response.code === 0) {
+      pendingInquiries.value = response.data.slice(0, 3)
+    }
+  } catch (error) {
+    console.error('加载质询列表失败:', error)
+  }
+}
+
+onMounted(async () => {
+  await loadUserData()
+  await loadStatistics()
+  await loadRecentEntries()
+  await loadPendingInquiries()
 })
 </script>
 

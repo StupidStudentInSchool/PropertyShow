@@ -64,8 +64,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import axios from 'axios'
 import { Building2, User, Lock, Loader2, AlertCircle } from 'lucide-vue-next'
+import { authApi } from '../api'
 
 const username = ref('')
 const password = ref('')
@@ -82,18 +82,12 @@ const handleLogin = async () => {
   isLoading.value = true
   
   try {
-    const response = await axios.post('/api/v1/auth/login', {
-      username: username.value,
-      password: password.value
-    })
+    const response = await authApi.login(username.value, password.value)
     
-    if (response.data.code === 0) {
-      localStorage.setItem('token', response.data.data.token)
-      localStorage.setItem('username', response.data.data.username)
-      localStorage.setItem('role', response.data.data.role)
+    if (response.code === 0) {
       window.location.href = '/'
     } else {
-      showErrorToast(response.data.message || '登录失败')
+      showErrorToast(response.message || '登录失败')
     }
   } catch (error: any) {
     console.error('Login error:', error)
