@@ -1,0 +1,198 @@
+/* 公示页面样式 */
+
+/* 账期选择器 */
+.period-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.period-btn {
+  width: 64rpx;
+  height: 64rpx;
+  background: #f5f5f5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 40rpx;
+  color: #666666;
+}
+
+.period-text {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1890ff;
+  margin: 0 32rpx;
+}
+
+/* 收支概览 */
+.overview-row {
+  display: flex;
+  justify-content: space-around;
+  padding: 20rpx 0;
+}
+
+.overview-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx;
+  border-radius: 16rpx;
+  width: 45%;
+}
+
+.overview-item.income {
+  background: #f6ffed;
+}
+
+.overview-item.expense {
+  background: #fff2f0;
+}
+
+.overview-icon {
+  font-size: 36rpx;
+  margin-right: 16rpx;
+}
+
+.overview-item.income .overview-icon {
+  color: #52c41a;
+}
+
+.overview-item.expense .overview-icon {
+  color: #f5222d;
+}
+
+.overview-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.overview-label {
+  font-size: 24rpx;
+  color: #666666;
+  margin-bottom: 8rpx;
+}
+
+.overview-value {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.overview-item.income .overview-value {
+  color: #52c41a;
+}
+
+.overview-item.expense .overview-value {
+  color: #f5222d;
+}
+
+/* 结余进度条 */
+.balance-bar {
+  height: 12rpx;
+  background: #f0f0f0;
+  border-radius: 6rpx;
+  margin: 20rpx 0;
+  overflow: hidden;
+}
+
+.balance-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #52c41a 0%, #1890ff 100%);
+  border-radius: 6rpx;
+  transition: width 0.3s ease;
+}
+
+.balance-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #f0f0f0;
+}
+
+.balance-label {
+  font-size: 26rpx;
+  color: #999999;
+}
+
+.balance-value {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.balance-value.negative {
+  color: #f5222d;
+}
+
+/* 明细项 */
+.detail-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.detail-item:last-child {
+  border-bottom: none;
+}
+
+.detail-icon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+}
+
+.detail-icon.income {
+  background: #f6ffed;
+}
+
+.detail-icon.income::after {
+  content: '↑';
+  color: #52c41a;
+  font-size: 28rpx;
+}
+
+.detail-icon.expense {
+  background: #fff2f0;
+}
+
+.detail-icon.expense::after {
+  content: '↓';
+  color: #f5222d;
+  font-size: 28rpx;
+}
+
+.detail-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-name {
+  font-size: 28rpx;
+  color: #333333;
+  margin-bottom: 8rpx;
+}
+
+.detail-desc {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.detail-amount {
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+.detail-amount.income {
+  color: #52c41a;
+}
+
+.detail-amount.expense {
+  color: #f5222d;
+}

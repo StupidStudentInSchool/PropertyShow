@@ -1,0 +1,91 @@
+<view class="container">
+  <!-- 进行中的投票 -->
+  <view class="card" wx:if="{{ activeVotes.length > 0 }}">
+    <view class="card-header">
+      <text class="title">进行中的投票</text>
+      <text class="active-tag">进行中</text>
+    </view>
+    
+    <view wx:for="{{ activeVotes }}" wx:key="id" class="vote-card" bindtap="viewVote" data-id="{{ item.id }}">
+      <view class="vote-header">
+        <view class="vote-type-tag" :class="item.type">{{ item.typeText }}</view>
+        <text class="vote-status active">进行中</text>
+      </view>
+      <text class="vote-title">{{ item.title }}</text>
+      <text class="vote-desc">{{ item.description }}</text>
+      
+      <view class="vote-stats">
+        <view class="stat">
+          <text class="stat-value">{{ item.participationRate }}%</text>
+          <text class="stat-label">参与率</text>
+        </view>
+        <view class="stat">
+          <text class="stat-value">{{ item.forCount }}</text>
+          <text class="stat-label">赞成</text>
+        </view>
+        <view class="stat">
+          <text class="stat-value">{{ item.againstCount }}</text>
+          <text class="stat-label">反对</text>
+        </view>
+        <view class="stat">
+          <text class="stat-value">{{ item.abstainCount }}</text>
+          <text class="stat-label">弃权</text>
+        </view>
+      </view>
+      
+      <view class="vote-progress">
+        <view class="progress-bar">
+          <view class="progress-fill for" :style="{ width: item.forPercent + '%' }"></view>
+          <view class="progress-fill against" :style="{ width: item.againstPercent + '%' }"></view>
+        </view>
+      </view>
+      
+      <view class="vote-footer">
+        <text class="vote-deadline">截止时间: {{ formatDate(item.endAt) }}</text>
+        <button class="btn btn-primary btn-small" bindtap="handleVote" data-id="{{ item.id }}">
+          {{ item.hasVoted ? '查看结果' : '立即投票' }}
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 已结束的投票 -->
+  <view class="card" wx:if="{{ endedVotes.length > 0 }}">
+    <view class="card-header">
+      <text class="title">已结束的投票</text>
+    </view>
+    
+    <view wx:for="{{ endedVotes }}" wx:key="id" class="vote-card ended" bindtap="viewVote" data-id="{{ item.id }}">
+      <view class="vote-header">
+        <view class="vote-type-tag" :class="item.type">{{ item.typeText }}</view>
+        <text class="vote-status" :class="item.passed ? 'passed' : 'failed'">
+          {{ item.passed ? '已通过' : '未通过' }}
+        </text>
+      </view>
+      <text class="vote-title">{{ item.title }}</text>
+      <text class="vote-desc">{{ item.description }}</text>
+      
+      <view class="vote-stats">
+        <view class="stat">
+          <text class="stat-value">{{ item.participationRate }}%</text>
+          <text class="stat-label">参与率</text>
+        </view>
+        <view class="stat">
+          <text class="stat-value">{{ item.forPercent }}%</text>
+          <text class="stat-label">赞成率</text>
+        </view>
+      </view>
+      
+      <view class="vote-footer">
+        <text class="vote-deadline">投票已结束</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{ activeVotes.length === 0 && endedVotes.length === 0 }}">
+    <view class="empty-icon">🗳️</view>
+    <text class="empty-text">暂无投票</text>
+    <text class="empty-desc">当前没有进行中的投票议题</text>
+  </view>
+</view>

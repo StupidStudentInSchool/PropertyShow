@@ -1,0 +1,173 @@
+/* 投票页面样式 */
+
+/* 卡片头部 */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.active-tag {
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  background: #f6ffed;
+  color: #52c41a;
+  border-radius: 20rpx;
+}
+
+/* 投票卡片 */
+.vote-card {
+  background: #fafafa;
+  border-radius: 16rpx;
+  padding: 24rpx;
+  margin-bottom: 20rpx;
+}
+
+.vote-card:last-child {
+  margin-bottom: 0;
+}
+
+.vote-card.ended {
+  opacity: 0.8;
+}
+
+.vote-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.vote-type-tag {
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.vote-type-tag.RENOVATION {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.vote-type-tag.FEE_ADJUSTMENT {
+  background: #fff7e6;
+  color: #fa8c16;
+}
+
+.vote-type-tag.ELEVATOR {
+  background: #e6f7ff;
+  color: #1890ff;
+}
+
+.vote-type-tag.EXPENSE {
+  background: #f9f0ff;
+  color: #722ed1;
+}
+
+.vote-type-tag.PROPERTY_COMPANY {
+  background: #fff2f0;
+  color: #f5222d;
+}
+
+.vote-status {
+  font-size: 22rpx;
+  padding: 6rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.vote-status.active {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.vote-status.passed {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.vote-status.failed {
+  background: #fff2f0;
+  color: #f5222d;
+}
+
+.vote-title {
+  display: block;
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #1f1f1f;
+  margin-bottom: 12rpx;
+}
+
+.vote-desc {
+  display: block;
+  font-size: 26rpx;
+  color: #666666;
+  line-height: 1.5;
+  margin-bottom: 20rpx;
+}
+
+/* 投票统计 */
+.vote-stats {
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 20rpx;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #333333;
+  margin-bottom: 8rpx;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: #999999;
+}
+
+/* 进度条 */
+.vote-progress {
+  margin-bottom: 20rpx;
+}
+
+.progress-bar {
+  height: 16rpx;
+  background: #f0f0f0;
+  border-radius: 8rpx;
+  overflow: hidden;
+  display: flex;
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.progress-fill.for {
+  background: #52c41a;
+  border-radius: 8rpx 0 0 8rpx;
+}
+
+.progress-fill.against {
+  background: #f5222d;
+}
+
+/* 投票底部 */
+.vote-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 16rpx;
+  border-top: 1rpx solid #e8e8e8;
+}
+
+.vote-deadline {
+  font-size: 24rpx;
+  color: #999999;
+}

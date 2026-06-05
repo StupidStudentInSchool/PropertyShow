@@ -1,0 +1,58 @@
+<view class="container">
+  <!-- 发起质询按钮 -->
+  <view class="card">
+    <button class="btn btn-primary" bindtap="createInquiry">
+      ✏️ 发起质询
+    </button>
+  </view>
+
+  <!-- 我的质询 -->
+  <view class="card">
+    <text class="title">我的质询</text>
+    
+    <view wx:for="{{ myInquiries }}" wx:key="id" class="inquiry-item" bindtap="viewInquiry" data-id="{{ item.id }}">
+      <view class="inquiry-header">
+        <view class="inquiry-tag" :class="item.status">{{ item.statusText }}</view>
+        <text class="inquiry-time">{{ formatTime(item.createdAt) }}</text>
+      </view>
+      <text class="inquiry-title">{{ item.title }}</text>
+      <text class="inquiry-content">{{ item.content }}</text>
+      
+      <view class="inquiry-footer" wx:if="{{ item.repliedAt }}">
+        <view class="reply-info">
+          <text class="reply-label">物业回复:</text>
+          <text class="reply-text">{{ item.replyContent }}</text>
+        </view>
+        <text class="reply-time">{{ formatTime(item.repliedAt) }}</text>
+      </view>
+      
+      <view class="inquiry-footer" wx:else>
+        <text class="pending-text">等待物业回复 ({{ item.daysPending }}天)</text>
+      </view>
+    </view>
+    
+    <view class="empty-state" wx:if="{{ myInquiries.length === 0 }}">
+      <view class="empty-icon">❓</view>
+      <text class="empty-text">暂无质询</text>
+      <text class="empty-desc">点击上方按钮发起质询</text>
+    </view>
+  </view>
+
+  <!-- 全部质询 -->
+  <view class="card">
+    <view class="card-header">
+      <text class="title">全部质询</text>
+      <text class="more">查看全部 →</text>
+    </view>
+    
+    <view wx:for="{{ allInquiries }}" wx:key="id" class="inquiry-item" bindtap="viewInquiry" data-id="{{ item.id }}">
+      <view class="inquiry-header">
+        <view class="inquiry-tag" :class="item.status">{{ item.statusText }}</view>
+        <text class="inquiry-time">{{ formatTime(item.createdAt) }}</text>
+      </view>
+      <text class="inquiry-title">{{ item.title }}</text>
+      <text class="inquiry-content">{{ item.content }}</text>
+      <text class="inquiry-author">质询人: {{ item.authorName }}</text>
+    </view>
+  </view>
+</view>

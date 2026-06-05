@@ -1,0 +1,171 @@
+/* 账单页面样式 */
+
+/* 警告卡片 */
+.warning-card {
+  background: linear-gradient(135deg, #fff7e6 0%, #ffe58f 100%);
+  border: 1rpx solid #ffd666;
+}
+
+.warning-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.warning-icon {
+  font-size: 36rpx;
+  margin-right: 12rpx;
+}
+
+.warning-title {
+  font-size: 30rpx;
+  font-weight: 600;
+  color: #fa8c16;
+}
+
+.warning-amount {
+  display: block;
+  font-size: 32rpx;
+  color: #fa8c16;
+  margin-bottom: 20rpx;
+}
+
+.amount-danger {
+  font-size: 40rpx;
+  font-weight: 700;
+  color: #f5222d;
+}
+
+/* 标签页 */
+.period-tabs {
+  display: flex;
+  background: #f5f5f5;
+  border-radius: 12rpx;
+  padding: 8rpx;
+}
+
+.period-tab {
+  flex: 1;
+  text-align: center;
+  padding: 20rpx;
+  font-size: 28rpx;
+  color: #666666;
+  border-radius: 8rpx;
+  transition: all 0.3s ease;
+}
+
+.period-tab.active {
+  background: #ffffff;
+  color: #1890ff;
+  font-weight: 600;
+  box-shadow: 0 2rpx 8rpx rgba(0, 0, 0, 0.06);
+}
+
+/* 账单项 */
+.bill-item {
+  padding: 24rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.bill-item:last-child {
+  border-bottom: none;
+}
+
+.bill-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12rpx;
+}
+
+.bill-type {
+  display: flex;
+  align-items: center;
+}
+
+.type-icon {
+  font-size: 32rpx;
+  margin-right: 12rpx;
+}
+
+.type-text {
+  font-size: 28rpx;
+  color: #333333;
+  font-weight: 500;
+}
+
+.bill-period {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.bill-detail {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.bill-desc {
+  font-size: 26rpx;
+  color: #666666;
+}
+
+.bill-due {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.bill-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bill-amount {
+  font-size: 32rpx;
+  font-weight: 600;
+}
+
+.bill-amount.unpaid {
+  color: #f5222d;
+}
+
+.bill-amount.paid {
+  color: #52c41a;
+}
+
+/* 缴费记录 */
+.payment-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.payment-item:last-child {
+  border-bottom: none;
+}
+
+.payment-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.payment-type {
+  font-size: 28rpx;
+  color: #333333;
+  margin-bottom: 8rpx;
+}
+
+.payment-date {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.payment-amount {
+  font-size: 28rpx;
+  font-weight: 600;
+  color: #52c41a;
+}

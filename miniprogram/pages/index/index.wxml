@@ -1,0 +1,94 @@
+<view class="container">
+  <!-- 头部信息 -->
+  <view class="card">
+    <view class="header">
+      <view class="community-info">
+        <text class="community-name">{{ community.name }}</text>
+        <text class="community-address">{{ community.address }}</text>
+      </view>
+      <view class="community-stats">
+        <view class="stat-item">
+          <text class="stat-value">{{ community.totalHouseholds }}</text>
+          <text class="stat-label">户</text>
+        </view>
+        <view class="stat-divider"></view>
+        <view class="stat-item">
+          <text class="stat-value">{{ (community.totalArea / 10000).toFixed(2) }}</text>
+          <text class="stat-label">万m²</text>
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 快捷入口 -->
+  <view class="card">
+    <text class="title">快捷功能</text>
+    <view class="quick-entrance">
+      <view class="entrance-item" bindtap="goToPage" data-page="/pages/disclosure/disclosure">
+        <view class="entrance-icon entrance-disclosure"></view>
+        <text class="entrance-text">财务公示</text>
+      </view>
+      <view class="entrance-item" bindtap="goToPage" data-page="/pages/vote/vote">
+        <view class="entrance-icon entrance-vote"></view>
+        <text class="entrance-text">业主投票</text>
+      </view>
+      <view class="entrance-item" bindtap="goToPage" data-page="/pages/inquiry/inquiry">
+        <view class="entrance-icon entrance-inquiry"></view>
+        <text class="entrance-text">发起质询</text>
+      </view>
+      <view class="entrance-item" bindtap="goToPage" data-page="/pages/bill/bill">
+        <view class="entrance-icon entrance-bill"></view>
+        <text class="entrance-text">我的账单</text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 本月收支概览 -->
+  <view class="card">
+    <text class="title">本月概览</text>
+    <view class="summary-row">
+      <view class="summary-item">
+        <text class="summary-label">收入</text>
+        <text class="summary-value income">¥{{ formatAmount(monthlySummary.income) }}</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-label">支出</text>
+        <text class="summary-value expense">¥{{ formatAmount(monthlySummary.expense) }}</text>
+      </view>
+      <view class="summary-item">
+        <text class="summary-label">结余</text>
+        <text class="summary-value balance" :class="{ 'amount-negative': monthlySummary.balance < 0 }">
+          ¥{{ formatAmount(monthlySummary.balance) }}
+        </text>
+      </view>
+    </view>
+  </view>
+
+  <!-- 最新公告 -->
+  <view class="card">
+    <view class="card-header">
+      <text class="title">最新公告</text>
+      <text class="more" bindtap="goToAnnouncement">查看全部 →</text>
+    </view>
+    <view wx:for="{{ announcements }}" wx:key="id" class="announcement-item" bindtap="viewAnnouncement" data-id="{{ item.id }}">
+      <view class="announcement-content">
+        <text class="announcement-title">{{ item.title }}</text>
+        <text class="announcement-time">{{ formatTime(item.publishedAt) }}</text>
+      </view>
+      <view class="arrow-right"></view>
+    </view>
+  </view>
+
+  <!-- 待办事项 -->
+  <view class="card" wx:if="{{ pendingTasks.length > 0 }}">
+    <text class="title">待办事项</text>
+    <view wx:for="{{ pendingTasks }}" wx:key="id" class="task-item">
+      <view class="task-icon" :class="item.type"></view>
+      <view class="task-content">
+        <text class="task-title">{{ item.title }}</text>
+        <text class="task-desc">{{ item.description }}</text>
+      </view>
+      <view class="task-status" :class="item.status">{{ item.statusText }}</view>
+    </view>
+  </view>
+</view>

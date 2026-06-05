@@ -1,0 +1,71 @@
+<view class="container">
+  <!-- 账期选择 -->
+  <view class="card">
+    <view class="period-selector">
+      <view class="period-btn" bindtap="prevPeriod">‹</view>
+      <text class="period-text">{{ currentPeriod }}</text>
+      <view class="period-btn" bindtap="nextPeriod">›</view>
+    </view>
+  </view>
+
+  <!-- 收支概览 -->
+  <view class="card">
+    <text class="title">收支概览</text>
+    <view class="overview-row">
+      <view class="overview-item income">
+        <text class="overview-icon">↑</text>
+        <view class="overview-content">
+          <text class="overview-label">收入</text>
+          <text class="overview-value">¥{{ formatAmount(totalIncome) }}</text>
+        </view>
+      </view>
+      <view class="overview-item expense">
+        <text class="overview-icon">↓</text>
+        <view class="overview-content">
+          <text class="overview-label">支出</text>
+          <text class="overview-value">¥{{ formatAmount(totalExpense) }}</text>
+        </view>
+      </view>
+    </view>
+    <view class="balance-bar">
+      <view class="balance-fill" :style="{ width: balancePercent + '%' }"></view>
+    </view>
+    <view class="balance-info">
+      <text class="balance-label">结余</text>
+      <text class="balance-value" :class="{ 'negative': totalBalance < 0 }">¥{{ formatAmount(totalBalance) }}</text>
+    </view>
+  </view>
+
+  <!-- 收入明细 -->
+  <view class="card">
+    <text class="title">收入明细</text>
+    <view wx:for="{{ incomeItems }}" wx:key="id" class="detail-item">
+      <view class="detail-icon income"></view>
+      <view class="detail-content">
+        <text class="detail-name">{{ item.categoryName }}</text>
+        <text class="detail-desc">{{ item.counterparty }} · {{ formatDate(item.occurredAt) }}</text>
+      </view>
+      <text class="detail-amount income">+¥{{ formatAmount(item.amount) }}</text>
+    </view>
+  </view>
+
+  <!-- 支出明细 -->
+  <view class="card">
+    <text class="title">支出明细</text>
+    <view wx:for="{{ expenseItems }}" wx:key="id" class="detail-item">
+      <view class="detail-icon expense"></view>
+      <view class="detail-content">
+        <text class="detail-name">{{ item.categoryName }}</text>
+        <text class="detail-desc">{{ item.counterparty }} · {{ formatDate(item.occurredAt) }}</text>
+      </view>
+      <text class="detail-amount expense">-¥{{ formatAmount(item.amount) }}</text>
+    </view>
+  </view>
+
+  <!-- 查看凭证 -->
+  <view class="card">
+    <button class="btn btn-secondary" bindtap="viewAllEntries">
+      查看全部明细
+    </button>
+  </view>
+</view>

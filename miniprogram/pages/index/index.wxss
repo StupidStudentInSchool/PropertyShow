@@ -1,0 +1,279 @@
+/* 首页样式 */
+
+/* 头部信息 */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.community-info {
+  flex: 1;
+}
+
+.community-name {
+  display: block;
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1f1f1f;
+  margin-bottom: 8rpx;
+}
+
+.community-address {
+  display: block;
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.community-stats {
+  display: flex;
+  align-items: center;
+  background: linear-gradient(135deg, #e6f7ff 0%, #b3d9ff 100%);
+  border-radius: 16rpx;
+  padding: 16rpx 24rpx;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.stat-value {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #1890ff;
+}
+
+.stat-label {
+  font-size: 22rpx;
+  color: #666666;
+}
+
+.stat-divider {
+  width: 2rpx;
+  height: 48rpx;
+  background: #91caff;
+  margin: 0 20rpx;
+}
+
+/* 快捷入口 */
+.quick-entrance {
+  display: flex;
+  flex-wrap: wrap;
+  margin-top: 16rpx;
+}
+
+.entrance-item {
+  width: 25%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24rpx 0;
+}
+
+.entrance-icon {
+  width: 88rpx;
+  height: 88rpx;
+  border-radius: 50%;
+  margin-bottom: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.entrance-disclosure {
+  background: linear-gradient(135deg, #1890ff 0%, #096dd9 100%);
+}
+
+.entrance-disclosure::after {
+  content: '📊';
+  font-size: 40rpx;
+}
+
+.entrance-vote {
+  background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%);
+}
+
+.entrance-vote::after {
+  content: '🗳️';
+  font-size: 40rpx;
+}
+
+.entrance-inquiry {
+  background: linear-gradient(135deg, #fa8c16 0%, #d46b08 100%);
+}
+
+.entrance-inquiry::after {
+  content: '❓';
+  font-size: 40rpx;
+}
+
+.entrance-bill {
+  background: linear-gradient(135deg, #722ed1 0%, #531dab 100%);
+}
+
+.entrance-bill::after {
+  content: '💳';
+  font-size: 40rpx;
+}
+
+.entrance-text {
+  font-size: 24rpx;
+  color: #666666;
+}
+
+/* 概览 */
+.summary-row {
+  display: flex;
+  justify-content: space-around;
+  padding-top: 16rpx;
+}
+
+.summary-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.summary-label {
+  font-size: 24rpx;
+  color: #999999;
+  margin-bottom: 8rpx;
+}
+
+.summary-value {
+  font-size: 36rpx;
+  font-weight: 600;
+}
+
+.summary-value.income {
+  color: #52c41a;
+}
+
+.summary-value.expense {
+  color: #f5222d;
+}
+
+.summary-value.balance {
+  color: #1890ff;
+}
+
+.summary-value.balance.amount-negative {
+  color: #f5222d;
+}
+
+/* 卡片头部 */
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16rpx;
+}
+
+.more {
+  font-size: 24rpx;
+  color: #1890ff;
+}
+
+/* 公告项 */
+.announcement-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.announcement-item:last-child {
+  border-bottom: none;
+}
+
+.announcement-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.announcement-title {
+  font-size: 28rpx;
+  color: #333333;
+  margin-bottom: 8rpx;
+}
+
+.announcement-time {
+  font-size: 22rpx;
+  color: #999999;
+}
+
+/* 待办事项 */
+.task-item {
+  display: flex;
+  align-items: center;
+  padding: 20rpx 0;
+  border-bottom: 1rpx solid #f5f5f5;
+}
+
+.task-item:last-child {
+  border-bottom: none;
+}
+
+.task-icon {
+  width: 48rpx;
+  height: 48rpx;
+  border-radius: 12rpx;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20rpx;
+}
+
+.task-icon.vote {
+  background: #f6ffed;
+}
+
+.task-icon.vote::after {
+  content: '🗳️';
+  font-size: 24rpx;
+}
+
+.task-icon.inquiry {
+  background: #fff7e6;
+}
+
+.task-icon.inquiry::after {
+  content: '❓';
+  font-size: 24rpx;
+}
+
+.task-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.task-title {
+  font-size: 28rpx;
+  color: #333333;
+  margin-bottom: 8rpx;
+}
+
+.task-desc {
+  font-size: 24rpx;
+  color: #999999;
+}
+
+.task-status {
+  font-size: 22rpx;
+  padding: 8rpx 16rpx;
+  border-radius: 20rpx;
+}
+
+.task-status.active {
+  background: #f6ffed;
+  color: #52c41a;
+}
+
+.task-status.pending {
+  background: #fff7e6;
+  color: #fa8c16;
+}

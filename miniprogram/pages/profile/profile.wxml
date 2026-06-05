@@ -1,0 +1,85 @@
+<view class="container">
+  <!-- 用户信息卡片 -->
+  <view class="card user-card">
+    <view class="user-avatar">
+      <text class="avatar-icon">👤</text>
+    </view>
+    <view class="user-info">
+      <text class="user-name">{{ userInfo.name || '点击登录' }}</text>
+      <text class="user-role">{{ userInfo.roleName || '访客' }}</text>
+    </view>
+    <view class="login-btn" bindtap="goToLogin" wx:if="{{ !isLoggedIn }}">
+      <text class="login-text">登录</text>
+    </view>
+    <view class="logout-btn" bindtap="handleLogout" wx:else>
+      <text class="logout-text">退出</text>
+    </view>
+  </view>
+
+  <!-- 小区信息 -->
+  <view class="card" wx:if="{{ isLoggedIn }}">
+    <view class="section-title">
+      <text class="title-icon">🏠</text>
+      <text class="title">我的小区</text>
+    </view>
+    <view class="community-info" bindtap="goToCommunity">
+      <text class="community-name">{{ community.name }}</text>
+      <text class="community-address">{{ community.address }}</text>
+      <view class="arrow-right"></view>
+    </view>
+  </view>
+
+  <!-- 功能菜单 -->
+  <view class="card menu-card">
+    <view class="menu-item" bindtap="goToPage" data-page="/pages/bill/bill">
+      <view class="menu-icon bill">💳</view>
+      <text class="menu-text">我的账单</text>
+      <view class="menu-badge" wx:if="{{ pendingBills > 0 }}">{{ pendingBills }}</view>
+      <view class="arrow-right"></view>
+    </view>
+    
+    <view class="menu-item" bindtap="goToPage" data-page="/pages/inquiry/inquiry">
+      <view class="menu-icon inquiry">❓</view>
+      <text class="menu-text">我的质询</text>
+      <view class="menu-badge" wx:if="{{ pendingInquiries > 0 }}">{{ pendingInquiries }}</view>
+      <view class="arrow-right"></view>
+    </view>
+    
+    <view class="menu-item" bindtap="goToMyVotes">
+      <view class="menu-icon vote">🗳️</view>
+      <text class="menu-text">我的投票</text>
+      <view class="arrow-right"></view>
+    </view>
+    
+    <view class="menu-item" bindtap="goToSettings">
+      <view class="menu-icon settings">⚙️</view>
+      <text class="menu-text">设置</text>
+      <view class="arrow-right"></view>
+    </view>
+  </view>
+
+  <!-- 快捷操作 -->
+  <view class="card">
+    <view class="section-title">
+      <text class="title-icon">📞</text>
+      <text class="title">联系我们</text>
+    </view>
+    <view class="contact-list">
+      <view class="contact-item" bindtap="makeCall">
+        <text class="contact-icon">📱</text>
+        <text class="contact-text">物业电话</text>
+        <text class="contact-value">{{ community.contactPhone || '010-12345678' }}</text>
+      </view>
+      <view class="contact-item" bindtap="goToFeedback">
+        <text class="contact-icon">💬</text>
+        <text class="contact-text">意见反馈</text>
+        <view class="arrow-right"></view>
+      </view>
+    </view>
+  </view>
+
+  <!-- 版本信息 -->
+  <view class="version-info">
+    <text class="version-text">物业透明化系统 v1.0.0</text>
+  </view>
+</view>

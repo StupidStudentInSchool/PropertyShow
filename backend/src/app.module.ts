@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { RedisModule } from '@nestjs-modules/ioredis';
 import { ScheduleModule } from '@nestjs/schedule';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 
@@ -34,15 +33,6 @@ import { AuditModule } from './modules/audit/audit.module';
       logging: process.env.NODE_ENV === 'development',
       entities: [__dirname + '/**/*.entity{.ts,.js}'],
       migrations: [__dirname + '/database/migrations/*{.ts,.js}'],
-    }),
-
-    // Redis
-    RedisModule.forRoot({
-      type: 'single',
-      url: `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || '6379'}`,
-      options: {
-        password: process.env.REDIS_PASSWORD || undefined,
-      },
     }),
 
     // 定时任务

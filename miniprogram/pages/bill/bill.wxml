@@ -1,0 +1,92 @@
+<view class="container">
+  <!-- 待缴费提醒 -->
+  <view class="card warning-card" wx:if="{{ pendingAmount > 0 }}">
+    <view class="warning-header">
+      <text class="warning-icon">⚠️</text>
+      <text class="warning-title">有待缴费用</text>
+    </view>
+    <text class="warning-amount">待缴金额: <text class="amount-danger">¥{{ formatAmount(pendingAmount) }}</text></text>
+    <button class="btn btn-primary" bindtap="payAll">立即缴费</button>
+  </view>
+
+  <!-- 账期选择 -->
+  <view class="card">
+    <view class="period-tabs">
+      <view 
+        class="period-tab" 
+        :class="{ active: currentTab === 'unpaid' }"
+        bindtap="switchTab"
+        data-tab="unpaid"
+      >
+        待缴 ({{ unpaidCount }})
+      </view>
+      <view 
+        class="period-tab" 
+        :class="{ active: currentTab === 'paid' }"
+        bindtap="switchTab"
+        data-tab="paid"
+      >
+        已缴 ({{ paidCount }})
+      </view>
+      <view 
+        class="period-tab" 
+        :class="{ active: currentTab === 'all' }"
+        bindtap="switchTab"
+        data-tab="all"
+      >
+        全部
+      </view>
+    </view>
+  </view>
+
+  <!-- 账单列表 -->
+  <view class="card" wx:if="{{ bills.length > 0 }}">
+    <view wx:for="{{ bills }}" wx:key="id" class="bill-item">
+      <view class="bill-info">
+        <view class="bill-type">
+          <text class="type-icon">{{ getTypeIcon(item.type) }}</text>
+          <text class="type-text">{{ getTypeName(item.type) }}</text>
+        </view>
+        <text class="bill-period">{{ item.period }}</text>
+      </view>
+      
+      <view class="bill-detail">
+        <text class="bill-desc">{{ item.houseNumber }}</text>
+        <text class="bill-due">截止: {{ formatDate(item.dueDate) }}</text>
+      </view>
+      
+      <view class="bill-footer">
+        <text class="bill-amount" :class="item.status === 'UNPAID' ? 'unpaid' : 'paid'">
+          ¥{{ formatAmount(item.amount) }}
+        </text>
+        <button 
+          class="btn btn-small" 
+          :class="item.status === 'UNPAID' ? 'btn-primary' : 'btn-secondary'"
+          bindtap="handleBillAction"
+          data-id="{{ item.id }}"
+          data-status="{{ item.status }}"
+        >
+          {{ item.status === 'UNPAID' ? '立即缴费' : '查看详情' }}
+        </button>
+      </view>
+    </view>
+  </view>
+
+  <!-- 空状态 -->
+  <view class="empty-state" wx:if="{{ bills.length === 0 }}">
+    <view class="empty-icon">📋</view>
+    <text class="empty-text">{{ currentTab === 'unpaid' ? '暂无待缴账单' : '暂无账单记录' }}</text>
+  </view>
+
+  <!-- 缴费历史 -->
+  <view class="card" wx:if="{{ currentTab === 'paid' && paymentHistory.length > 0 }}">
+    <text class="title">缴费记录</text>
+    <view wx:for="{{ paymentHistory }}" wx:key="id" class="payment-item">
+      <view class="payment-info">
+        <text class="payment-type">{{ getTypeName(item.billType) }}</text>
+        <text class="payment-date">{{ formatDate(item.paidAt) }}</text>
+      </view>
+      <text class="payment-amount">-¥{{ formatAmount(item.amount) }}</text>
+    </view>
+  </view>
+</view>

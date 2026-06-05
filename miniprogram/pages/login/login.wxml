@@ -1,0 +1,56 @@
+<view class="container">
+  <!-- Logo 和标题 -->
+  <view class="logo-section">
+    <view class="logo">
+      <text class="logo-icon">🏠</text>
+    </view>
+    <text class="title">物业透明化系统</text>
+    <text class="subtitle">共建透明小区，共享美好生活</text>
+  </view>
+
+  <!-- 登录表单 -->
+  <view class="form-section">
+    <view class="input-wrap">
+      <view class="input-icon">👤</view>
+      <input 
+        class="input" 
+        placeholder="请输入用户名" 
+        placeholder-class="input-placeholder"
+        value="{{ username }}"
+        bindinput="onUsernameInput"
+      />
+    </view>
+
+    <view class="input-wrap">
+      <view class="input-icon">🔑</view>
+      <input 
+        class="input" 
+        type="password"
+        placeholder="请输入密码" 
+        placeholder-class="input-placeholder"
+        value="{{ password }}"
+        bindinput="onPasswordInput"
+      />
+    </view>
+
+    <view class="form-options">
+      <view class="checkbox" bindtap="toggleRemember">
+        <view class="checkbox-box" :class="{ checked: rememberMe }">
+          <text wx:if="{{ rememberMe }}" class="check-icon">✓</text>
+        </view>
+        <text class="checkbox-text">记住密码</text>
+      </view>
+      <text class="forgot-password" bindtap="forgotPassword">忘记密码?</text>
+    </view>
+
+    <button class="btn btn-primary login-btn" bindtap="handleLogin">
+      登录
+    </button>
+  </view>
+
+  <!-- 底部链接 -->
+  <view class="footer">
+    <text class="footer-text">还没有账号?</text>
+    <text class="register-link" bindtap="goToRegister">立即注册</text>
+  </view>
+</view>
