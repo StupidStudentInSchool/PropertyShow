@@ -1,0 +1,28 @@
+# 忽略文件
+node_modules/
+dist/
+.env
+.env.local
+*.log
+.DS_Store
+*.swp
+*.swo
+*~
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# 测试
+coverage/
+.nyc_output/
+
+# 临时文件
+tmp/
+temp/
+
+# Docker
+*.pid
+*.seed
+*.pid.lock

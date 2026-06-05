@@ -1,0 +1,90 @@
+{
+  "easycom": {
+    "autoscan": true,
+    "custom": {
+      "^uni-(.*)": "@dcloudio/uni-ui/lib/uni-$1/uni-$1.vue"
+    }
+  },
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "物业透明化系统"
+      }
+    },
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录"
+      }
+    },
+    {
+      "path": "pages/disclosure/disclosure",
+      "style": {
+        "navigationBarTitleText": "公示信息"
+      }
+    },
+    {
+      "path": "pages/vote/vote",
+      "style": {
+        "navigationBarTitleText": "业主投票"
+      }
+    },
+    {
+      "path": "pages/inquiry/inquiry",
+      "style": {
+        "navigationBarTitleText": "质询"
+      }
+    },
+    {
+      "path": "pages/bill/bill",
+      "style": {
+        "navigationBarTitleText": "我的账单"
+      }
+    },
+    {
+      "path": "pages/profile/profile",
+      "style": {
+        "navigationBarTitleText": "个人中心"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "物业透明化",
+    "navigationBarBackgroundColor": "#F8F8F8",
+    "backgroundColor": "#F8F8F8"
+  },
+  "tabBar": {
+    "color": "#7A7E83",
+    "selectedColor": "#007AFF",
+    "borderStyle": "black",
+    "backgroundColor": "#ffffff",
+    "list": [
+      {
+        "pagePath": "pages/index/index",
+        "iconPath": "static/tabbar/home.png",
+        "selectedIconPath": "static/tabbar/home-active.png",
+        "text": "首页"
+      },
+      {
+        "pagePath": "pages/disclosure/disclosure",
+        "iconPath": "static/tabbar/disclosure.png",
+        "selectedIconPath": "static/tabbar/disclosure-active.png",
+        "text": "公示"
+      },
+      {
+        "pagePath": "pages/vote/vote",
+        "iconPath": "static/tabbar/vote.png",
+        "selectedIconPath": "static/tabbar/vote-active.png",
+        "text": "投票"
+      },
+      {
+        "pagePath": "pages/profile/profile",
+        "iconPath": "static/tabbar/profile.png",
+        "selectedIconPath": "static/tabbar/profile-active.png",
+        "text": "我的"
+      }
+    ]
+  }
+}
