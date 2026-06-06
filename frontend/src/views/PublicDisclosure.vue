@@ -49,9 +49,87 @@
         </div>
       </div>
 
-      <!-- 收支明细与日常服务记录同行布局 -->
+      <!-- 公告通知与日常服务记录同行布局 -->
       <div class="finance-service-row">
-        <!-- 本月收支明细 -->
+        <!-- 公告通知 -->
+        <section class="notice-section section-wrapper">
+          <div class="section-header">
+            <h2>公告通知</h2>
+            <span class="notice-count">{{ importantNotices.length }}条公告</span>
+          </div>
+
+          <div class="notice-cards">
+            <div v-for="notice in importantNotices" :key="notice.id" :class="['notice-card', notice.type]">
+              <div class="notice-header">
+                <span :class="['notice-tag', notice.type]">{{ notice.icon }}</span>
+                <span class="notice-date">{{ formatDate(notice.createdAt) }}</span>
+              </div>
+              <h3 class="notice-title">{{ notice.title }}</h3>
+              <p class="notice-content">{{ notice.content }}</p>
+              <div class="notice-footer">
+                <span :class="['notice-type-badge', notice.type]">
+                  {{ notice.type === 'warning' ? '重要' : notice.type === 'success' ? '活动' : '通知' }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="tips-section">
+            <h3>温馨提示</h3>
+            <div class="tips-grid">
+              <div v-for="(tip, index) in tips" :key="index" class="tip-card">
+                <span class="tip-icon">提示</span>
+                <span class="tip-text">{{ tip }}</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 日常服务记录 - 带图片展示 -->
+        <section class="daily-service-section section-wrapper">
+          <div class="section-header">
+            <h2>日常服务记录</h2>
+            <span class="service-date">{{ currentDate }}</span>
+          </div>
+          <div class="service-gallery-scroll">
+            <div class="service-gallery">
+              <div v-for="service in dailyServices" :key="service.id" class="service-card">
+                <div class="service-image-wrapper">
+                  <img :src="service.image" :alt="service.title" class="service-image" />
+                </div>
+                <div class="service-info">
+                  <h3>{{ service.title }}</h3>
+                  <p class="service-description">{{ service.description }}</p>
+                  <div class="service-meta">
+                    <span class="service-time">{{ service.time }}</span>
+                    <span class="service-staff">{{ service.staff }}</span>
+                  </div>
+                  <div :class="['service-status', service.status]">
+                    {{ service.statusText }}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="service-stats">
+            <div class="stat-card">
+              <span class="stat-number">{{ dailyServiceStats.completed }}</span>
+              <span class="stat-label">今日已完成</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-number">{{ dailyServiceStats.inProgress }}</span>
+              <span class="stat-label">进行中</span>
+            </div>
+            <div class="stat-card">
+              <span class="stat-number">{{ dailyServiceStats.total }}</span>
+              <span class="stat-label">今日计划</span>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <!-- 本月收支明细 -->
+      <div class="notice-inquiry-row">
         <section class="finance-highlight-section section-wrapper">
           <div class="section-header">
             <h2>本月收支明细</h2>
@@ -129,82 +207,6 @@
             </tr>
           </tbody>
         </table>
-        </section>
-
-        <!-- 日常服务记录 - 带图片展示 -->
-        <section class="daily-service-section section-wrapper">
-          <div class="section-header">
-            <h2>日常服务记录</h2>
-            <span class="service-date">{{ currentDate }}</span>
-          </div>
-          <div class="service-gallery">
-            <div v-for="service in dailyServices" :key="service.id" class="service-card">
-              <div class="service-image-wrapper">
-                <img :src="service.image" :alt="service.title" class="service-image" />
-              </div>
-              <div class="service-info">
-                <h3>{{ service.title }}</h3>
-                <p class="service-description">{{ service.description }}</p>
-                <div class="service-meta">
-                  <span class="service-time">{{ service.time }}</span>
-                  <span class="service-staff">{{ service.staff }}</span>
-                </div>
-                <div :class="['service-status', service.status]">
-                  {{ service.statusText }}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="service-stats">
-            <div class="stat-card">
-              <span class="stat-number">{{ dailyServiceStats.completed }}</span>
-              <span class="stat-label">今日已完成</span>
-            </div>
-            <div class="stat-card">
-              <span class="stat-number">{{ dailyServiceStats.inProgress }}</span>
-              <span class="stat-label">进行中</span>
-            </div>
-            <div class="stat-card">
-              <span class="stat-number">{{ dailyServiceStats.total }}</span>
-              <span class="stat-label">今日计划</span>
-            </div>
-          </div>
-        </section>
-      </div>
-
-      <!-- 公告通知 -->
-      <div class="notice-inquiry-row">
-        <section class="notice-section section-wrapper">
-          <div class="section-header">
-            <h2>公告通知</h2>
-            <span class="notice-count">{{ importantNotices.length }}条公告</span>
-          </div>
-
-          <div class="notice-cards">
-            <div v-for="notice in importantNotices" :key="notice.id" :class="['notice-card', notice.type]">
-              <div class="notice-header">
-                <span :class="['notice-tag', notice.type]">{{ notice.icon }}</span>
-                <span class="notice-date">{{ formatDate(notice.createdAt) }}</span>
-              </div>
-              <h3 class="notice-title">{{ notice.title }}</h3>
-              <p class="notice-content">{{ notice.content }}</p>
-              <div class="notice-footer">
-                <span :class="['notice-type-badge', notice.type]">
-                  {{ notice.type === 'warning' ? '重要' : notice.type === 'success' ? '活动' : '通知' }}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          <div class="tips-section">
-            <h3>温馨提示</h3>
-            <div class="tips-grid">
-              <div v-for="(tip, index) in tips" :key="index" class="tip-card">
-                <span class="tip-icon">提示</span>
-                <span class="tip-text">{{ tip }}</span>
-              </div>
-            </div>
-          </div>
         </section>
 
         <!-- 快速质询模块 -->
@@ -315,22 +317,7 @@
           </div>
         </div>
 
-        <!-- 快捷操作面板 -->
-        <div class="quick-actions">
-          <div class="quick-actions-title">快捷操作</div>
-          <div class="quick-actions-grid">
-            <button
-              v-for="action in quickActions"
-              :key="action.id"
-              class="quick-action-btn"
-              @click="action.action"
-            >
-              <span class="quick-action-icon">{{ action.icon }}</span>
-              <span class="quick-action-title">{{ action.title }}</span>
-            </button>
-          </div>
-        </div>
-      </section>
+        </section>
 
       <section class="metrics-section">
         <div class="section-header">
@@ -352,115 +339,6 @@
           </div>
         </div>
       </section>
-
-      <div class="two-columns">
-        <section class="finance-section">
-          <div class="section-header">
-            <h2>财务透明度</h2>
-          </div>
-          
-          <div class="subsection">
-            <h3>维修基金</h3>
-            <div class="fund-info">
-              <div class="fund-item">
-                <span class="label">基金余额</span>
-                <span class="value">¥{{ formatNumber(maintenanceFund.balance) }}</span>
-              </div>
-              <div class="fund-item">
-                <span class="label">本期变动</span>
-                <span :class="['value', maintenanceFund.change >= 0 ? 'positive' : 'negative']">
-                  {{ maintenanceFund.change >= 0 ? '+' : '' }}¥{{ formatNumber(maintenanceFund.change) }}
-                </span>
-              </div>
-              <div class="fund-item">
-                <span class="label">累计使用</span>
-                <span class="value">¥{{ formatNumber(maintenanceFund.totalUsed) }}</span>
-              </div>
-            </div>
-            <div class="fund-details">
-              <h4>使用明细</h4>
-              <div class="fund-usage-list">
-                <div class="fund-usage-item" v-for="usage in fundUsageDetails" :key="usage.id">
-                  <div class="usage-info">
-                    <span class="usage-item-name">{{ usage.item }}</span>
-                    <span class="usage-date">{{ usage.date }}</span>
-                  </div>
-                  <div class="usage-amount">-¥{{ formatNumber(usage.amount) }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section class="service-section">
-          <div class="section-header">
-            <h2>服务动态</h2>
-          </div>
-
-          <div class="subsection">
-            <h3>今日巡视</h3>
-            <div class="patrol-info">
-              <div class="patrol-stats">
-                <div class="stat-item">
-                  <span class="stat-value">{{ dailyTasks.patrolCompleted }}</span>
-                  <span class="stat-label">已完成</span>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat-item">
-                  <span class="stat-value">{{ dailyTasks.patrolPlan - dailyTasks.patrolCompleted }}</span>
-                  <span class="stat-label">进行中</span>
-                </div>
-                <div class="stat-divider"></div>
-                <div class="stat-item">
-                  <span class="stat-value">{{ dailyTasks.patrolPlan }}</span>
-                  <span class="stat-label">总计划</span>
-                </div>
-              </div>
-              <div class="patrol-progress">
-                <div class="progress-bar">
-                  <div class="progress-fill" :style="{ width: (dailyTasks.patrolCompleted / dailyTasks.patrolPlan * 100) + '%' }"></div>
-                </div>
-                <span class="progress-text">巡视人员: {{ dailyTasks.patrolStaff }}</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="subsection">
-            <h3>设备检修</h3>
-            <div class="equipment-list">
-              <div v-for="equipment in equipmentList" :key="equipment.id" :class="['equipment-item', equipment.status]">
-                <div class="equipment-icon">{{ equipment.icon }}</div>
-                <div class="equipment-info">
-                  <span class="equipment-name">{{ equipment.name }}</span>
-                  <span class="equipment-location">{{ equipment.location }}</span>
-                </div>
-                <div class="equipment-status">
-                  <span :class="['status-dot', equipment.status]"></span>
-                  <span class="status-text">{{ equipment.statusText }}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="subsection">
-            <h3>待办事项</h3>
-            <div class="todo-stats">
-              <div :class="['todo-item', 'completed']">
-                <span class="todo-count">{{ todoStats.completed }}</span>
-                <span class="todo-label">已完成</span>
-              </div>
-              <div :class="['todo-item', 'progress']">
-                <span class="todo-count">{{ todoStats.progress }}</span>
-                <span class="todo-label">进行中</span>
-              </div>
-              <div :class="['todo-item', 'pending']">
-                <span class="todo-count">{{ todoStats.pending }}</span>
-                <span class="todo-label">待处理</span>
-              </div>
-            </div>
-          </div>
-        </section>
-      </div>
 
       <div class="two-columns">
         <section class="participation-section">
@@ -680,7 +558,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue';
-import { publicDisclosureApi } from '@/api/public';
+import { publicDisclosureApi, serviceRecordApi, inquiryApi } from '@/api/public';
 import { Line, Radar } from 'vue-chartjs';
 import {
   Chart as ChartJS,
@@ -740,6 +618,7 @@ interface Transaction {
   amount: number;
   counterparty: string;
   hasEvidence: boolean;
+  evidenceUrl?: string;
 }
 
 interface MaintenanceFund {
@@ -792,12 +671,45 @@ interface Notice {
   title: string;
   icon: string;
   createdAt: string;
+  type: string;
+  content: string;
 }
 
 interface Satisfaction {
   score: number;
   count: number;
   updatedAt: string;
+}
+
+interface ServiceRecord {
+  id: number;
+  title: string;
+  description: string;
+  image: string;
+  time: string;
+  staff: string;
+  status: string;
+  statusText: string;
+}
+
+interface RecentInquiry {
+  id: number;
+  content: string;
+  createdAt: string;
+  status: string;
+  statusText: string;
+  reply?: string;
+}
+
+interface ServiceStats {
+  averageResponseTime: number;
+  completionRate: number;
+}
+
+interface DailyServiceStats {
+  completed: number;
+  inProgress: number;
+  total: number;
 }
 
 const communityInfo = ref<CommunityInfo>({
@@ -877,17 +789,17 @@ const votes = ref<Vote[]>([
 ]);
 
 const inquiries = ref<Inquiry[]>([
-  { id: 1, content: '关于3号楼电梯频繁故障的质询', createdAt: '2026-06-03', status: 'replied', statusText: '已回复', repliedAt: '2026-06-04' },
-  { id: 2, content: '希望增加垃圾分类指导', createdAt: '2026-06-04', status: 'replied', statusText: '已回复', repliedAt: '2026-06-05' },
-  { id: 3, content: '地下车库照明不足问题', createdAt: '2026-06-05', status: 'processing', statusText: '处理中' },
+  { id: 1, content: '关于3号楼电梯频繁故障的质询', createdAt: '2026-06-03', status: 'REPLIED', statusText: '已回复', repliedAt: '2026-06-04' },
+  { id: 2, content: '希望增加垃圾分类指导', createdAt: '2026-06-04', status: 'REPLIED', statusText: '已回复', repliedAt: '2026-06-05' },
+  { id: 3, content: '地下车库照明不足问题', createdAt: '2026-06-05', status: 'PROCESSING', statusText: '处理中' },
 ]);
 
 const importantNotices = ref<Notice[]>([
-  { id: 1, title: '【停水通知】6月8日9:00-12:00小区停水进行管道维护', icon: '通知', createdAt: '2026-06-03', type: 'warning', content: '因小区供水管道年度检修，6月8日上午9:00-12:00将暂停供水，请各位业主提前做好储水准备。' },
-  { id: 2, title: '【安全提醒】近期加强小区安全巡逻', icon: '安全', createdAt: '2026-06-04', type: 'info', content: '近期周边治安形势复杂，物业已加强夜间巡逻频次，请业主注意门窗安全，如有异常及时联系物业。' },
-  { id: 3, title: '【活动通知】端午节社区活动报名开始', icon: '活动', createdAt: '2026-06-05', type: 'success', content: '6月15日上午9:00在小区广场举办端午节活动，包粽子比赛、亲子游戏等精彩节目，欢迎报名参与！' },
-  { id: 4, title: '【电梯维护】3号楼电梯定期保养', icon: '维护', createdAt: '2026-06-05', type: 'info', content: '6月6日-7日对3号楼两部电梯进行定期保养，期间可能短暂停运，请业主谅解。' },
-  { id: 5, title: '【垃圾分类】新分类规则说明会', icon: '环保', createdAt: '2026-06-02', type: 'info', content: '6月10日下午2:00在会所举办垃圾分类新规则说明会，欢迎业主参加学习。' },
+  { id: 1, title: '【停水通知】6月8日9:00-12:00小区停水进行管道维护', icon: '🔔', createdAt: '2026-06-03', type: 'warning', content: '因小区供水管道年度检修，6月8日上午9:00-12:00将暂停供水，请各位业主提前做好储水准备。' },
+  { id: 2, title: '【安全提醒】近期加强小区安全巡逻', icon: '⚠️', createdAt: '2026-06-04', type: 'warning', content: '近期周边治安形势复杂，物业已加强夜间巡逻频次，请业主注意门窗安全，如有异常及时联系物业。' },
+  { id: 3, title: '【活动通知】端午节社区活动报名开始', icon: '🎉', createdAt: '2026-06-05', type: 'success', content: '6月15日上午9:00在小区广场举办端午节活动，包粽子比赛、亲子游戏等精彩节目，欢迎报名参与！' },
+  { id: 4, title: '【电梯维护】3号楼电梯定期保养', icon: '🛠️', createdAt: '2026-06-05', type: 'info', content: '6月6日-7日对3号楼两部电梯进行定期保养，期间可能短暂停运，请业主谅解。' },
+  { id: 5, title: '【垃圾分类】新分类规则说明会', icon: '♻️', createdAt: '2026-06-02', type: 'info', content: '6月10日下午2:00在会所举办垃圾分类新规则说明会，欢迎业主参加学习。' },
 ]);
 
 const tips = ref<string[]>([
@@ -902,42 +814,11 @@ const satisfaction = ref<Satisfaction>({
   updatedAt: '2026-06-05',
 });
 
-interface ServiceRecord {
-  id: number;
-  title: string;
-  description: string;
-  image: string;
-  time: string;
-  staff: string;
-  status: string;
-  statusText: string;
-}
-
-interface RecentInquiry {
-  id: number;
-  content: string;
-  createdAt: string;
-  status: string;
-  statusText: string;
-  reply?: string;
-}
-
-interface ServiceStats {
-  averageResponseTime: number;
-  completionRate: number;
-}
-
-interface DailyServiceStats {
-  completed: number;
-  inProgress: number;
-  total: number;
-}
-
 const dailyServices = ref<ServiceRecord[]>([
-  { id: 1, title: '公共区域清洁', description: '完成小区1-3号楼公共区域地面清洁、楼道清扫', image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop', time: '08:30-10:30', staff: '王阿姨', status: 'completed', statusText: '已完成' },
-  { id: 2, title: '绿化养护', description: '修剪小区绿化带、浇灌花草', image: 'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400&h=300&fit=crop', time: '09:00-11:00', staff: '李师傅', status: 'completed', statusText: '已完成' },
-  { id: 3, title: '垃圾清运', description: '清理各楼栋垃圾桶并转运至小区垃圾站', image: 'https://images.unsplash.com/photo-1553684924-3d93513310e4?w=400&h=300&fit=crop', time: '07:00-08:30', staff: '张师傅', status: 'completed', statusText: '已完成' },
-  { id: 4, title: '电梯维护', description: '对1号楼电梯进行例行检查和保养', image: 'https://images.unsplash.com/photo-1502945015378-0e284ca1a5be?w=400&h=300&fit=crop', time: '14:00-16:00', staff: '维保团队', status: 'in_progress', statusText: '进行中' },
+  { id: 1, title: '公共区域清洁', description: '完成小区1-3号楼公共区域地面清洁、楼道清扫', image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop', time: '08:30-10:30', staff: '王阿姨', status: 'COMPLETED', statusText: '已完成' },
+  { id: 2, title: '绿化养护', description: '修剪小区绿化带、浇灌花草', image: 'https://images.unsplash.com/photo-1459411552884-841db9b3cc2a?w=400&h=300&fit=crop', time: '09:00-11:00', staff: '李师傅', status: 'COMPLETED', statusText: '已完成' },
+  { id: 3, title: '垃圾清运', description: '清理各楼栋垃圾桶并转运至小区垃圾站', image: 'https://images.unsplash.com/photo-1553684924-3d93513310e4?w=400&h=300&fit=crop', time: '07:00-08:30', staff: '张师傅', status: 'COMPLETED', statusText: '已完成' },
+  { id: 4, title: '电梯维护', description: '对1号楼电梯进行例行检查和保养', image: 'https://images.unsplash.com/photo-1502945015378-0e284ca1a5be?w=400&h=300&fit=crop', time: '14:00-16:00', staff: '维保团队', status: 'IN_PROGRESS', statusText: '进行中' },
 ]);
 
 const dailyServiceStats = ref<DailyServiceStats>({
@@ -947,47 +828,15 @@ const dailyServiceStats = ref<DailyServiceStats>({
 });
 
 const recentInquiries = ref<RecentInquiry[]>([
-  { id: 1, content: '关于3号楼电梯频繁故障的质询', createdAt: '2026-06-03', status: 'replied', statusText: '已回复', reply: '已安排维保人员进行全面检查，发现问题已修复。' },
-  { id: 2, content: '希望增加垃圾分类指导', createdAt: '2026-06-04', status: 'replied', statusText: '已回复', reply: '我们将在下周安排垃圾分类志愿者进行现场指导。' },
-  { id: 3, content: '地下车库照明不足问题', createdAt: '2026-06-05', status: 'processing', statusText: '处理中' },
+  { id: 1, content: '关于3号楼电梯频繁故障的质询', createdAt: '2026-06-03', status: 'REPLIED', statusText: '已回复', reply: '已安排维保人员进行全面检查，发现问题已修复。' },
+  { id: 2, content: '希望增加垃圾分类指导', createdAt: '2026-06-04', status: 'REPLIED', statusText: '已回复', reply: '我们将在下周安排垃圾分类志愿者进行现场指导。' },
+  { id: 3, content: '地下车库照明不足问题', createdAt: '2026-06-05', status: 'PROCESSING', statusText: '处理中' },
 ]);
 
 const serviceStats = ref<ServiceStats>({
   averageResponseTime: 45,
   completionRate: 96,
 });
-
-// 凭证查看弹窗
-const openEvidence = (item: Transaction) => {
-  selectedEvidence.value = item;
-  showEvidenceModal.value = true;
-};
-
-const quickInquiryContent = ref('');
-const quickInquiryAnonymous = ref(true);
-const quickInquiryContact = ref('');
-const inquirySuccess = ref(false);
-
-const currentMonthLabel = computed(() => {
-  const month = selectedMonth.value;
-  const [year, m] = month.split('-');
-  return `${year}年${parseInt(m)}月`;
-});
-
-const submitQuickInquiry = async () => {
-  try {
-    // 模拟提交
-    console.log('提交质询:', quickInquiryContent.value);
-    inquirySuccess.value = true;
-    quickInquiryContent.value = '';
-    quickInquiryContact.value = '';
-    setTimeout(() => {
-      inquirySuccess.value = false;
-    }, 3000);
-  } catch (error) {
-    console.error('提交质询失败:', error);
-  }
-};
 
 const activeTab = ref('income');
 const showFeedbackModal = ref(false);
@@ -1011,28 +860,29 @@ const availableMonths = ref([
   { label: '2026年2月', value: '2026-02' },
   { label: '2026年1月', value: '2026-01' },
 ]);
-
-const changeMonth = () => {
-  console.log('切换到月份:', selectedMonth.value);
-  // TODO: 调用API获取历史数据
-};
-
+const quickInquiryContent = ref('');
+const quickInquiryAnonymous = ref(true);
+const quickInquiryContact = ref('');
+const inquirySuccess = ref(false);
 const currentNoticeIndex = ref(0);
+const weather = ref('晴 26°C');
+const refreshTime = ref(new Date());
+const isRefreshing = ref(false);
+const showRefreshToast = ref(false);
+const isDarkMode = ref(false);
+const isSpeechEnabled = ref(false);
+const speechSynthesis = ref<SpeechSynthesis | null>(null);
 
-const startCarousel = () => {
-  const interval = window.setInterval(() => {
-    currentNoticeIndex.value = (currentNoticeIndex.value + 1) % importantNotices.value.length;
-  }, 5000);
-  // 保存interval引用以便将来可能需要清除
-  window.addEventListener('beforeunload', () => clearInterval(interval));
-};
+const currentMonthLabel = computed(() => {
+  const month = selectedMonth.value;
+  const [year, m] = month.split('-');
+  return `${year}年${parseInt(m)}月`;
+});
 
 const currentDate = computed(() => {
   const now = new Date();
   return `${now.getFullYear()}年${now.getMonth() + 1}月${now.getDate()}日`;
 });
-
-const weather = ref('晴 26°C');
 
 const lastUpdateTime = computed(() => {
   const now = new Date();
@@ -1046,6 +896,36 @@ const formatNumber = (num: number): string => {
 const formatDate = (dateStr: string): string => {
   const date = new Date(dateStr);
   return `${date.getMonth() + 1}/${date.getDate()}`;
+};
+
+const openEvidence = (item: Transaction) => {
+  selectedEvidence.value = item;
+  showEvidenceModal.value = true;
+};
+
+const submitQuickInquiry = async () => {
+  try {
+    console.log('提交质询:', quickInquiryContent.value);
+    inquirySuccess.value = true;
+    quickInquiryContent.value = '';
+    quickInquiryContact.value = '';
+    setTimeout(() => {
+      inquirySuccess.value = false;
+    }, 3000);
+  } catch (error) {
+    console.error('提交质询失败:', error);
+  }
+};
+
+const changeMonth = () => {
+  console.log('切换到月份:', selectedMonth.value);
+};
+
+const startCarousel = () => {
+  const interval = window.setInterval(() => {
+    currentNoticeIndex.value = (currentNoticeIndex.value + 1) % importantNotices.value.length;
+  }, 5000);
+  window.addEventListener('beforeunload', () => clearInterval(interval));
 };
 
 const submitFeedback = async () => {
@@ -1098,6 +978,191 @@ const exportData = () => {
   link.download = `物业公示数据_${new Date().toISOString().split('T')[0]}.json`;
   link.click();
   window.URL.revokeObjectURL(url);
+};
+
+const toggleDarkMode = () => {
+  isDarkMode.value = !isDarkMode.value;
+  document.documentElement.classList.toggle('dark-mode', isDarkMode.value);
+};
+
+const refreshData = async () => {
+  isRefreshing.value = true;
+  showRefreshToast.value = true;
+
+  try {
+    await loadDisclosureData();
+    refreshTime.value = new Date();
+  } finally {
+    isRefreshing.value = false;
+    setTimeout(() => {
+      showRefreshToast.value = false;
+    }, 3000);
+  }
+};
+
+const toggleSpeech = () => {
+  if (!('speechSynthesis' in window)) {
+    alert('抱歉，您的浏览器不支持语音播报功能');
+    return;
+  }
+
+  isSpeechEnabled.value = !isSpeechEnabled.value;
+
+  if (isSpeechEnabled.value) {
+    speechSynthesis.value = window.speechSynthesis;
+    announceImportantInfo();
+  } else {
+    stopSpeech();
+  }
+};
+
+const stopSpeech = () => {
+  if (speechSynthesis.value) {
+    speechSynthesis.value.cancel();
+  }
+};
+
+const announceImportantInfo = () => {
+  if (!isSpeechEnabled.value || !speechSynthesis.value) return;
+
+  const text = `欢迎访问${communityInfo.value.name}物业公示平台。本月收入${formatNumber(financialSummary.value.monthlyIncome)}元，支出${formatNumber(financialSummary.value.monthlyExpense)}元，当前满意度${satisfaction.value.score}分。`;
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'zh-CN';
+  utterance.rate = 1;
+  utterance.pitch = 1;
+
+  speechSynthesis.value.speak(utterance);
+};
+
+const loadDisclosureData = async () => {
+  isRefreshing.value = true;
+  try {
+    const response: any = await publicDisclosureApi.getDisclosure(1);
+    
+    if (response) {
+      if (response.community_info) {
+        communityInfo.value = {
+          name: response.community_info.name || communityInfo.value.name,
+          address: response.community_info.address || communityInfo.value.address,
+          contactPhone: response.community_info.contact_phone,
+          totalHouseholds: response.community_info.total_households,
+        };
+      }
+      
+      if (response.financial_summary) {
+        financialSummary.value = {
+          monthlyIncome: response.financial_summary.monthly_income || 0,
+          monthlyExpense: response.financial_summary.monthly_expense || 0,
+          balance: response.financial_summary.balance || 0,
+          incomeChange: response.financial_summary.income_change || 0,
+          expenseChange: response.financial_summary.expense_change || 0,
+          balanceChange: response.financial_summary.balance_change || 0,
+        };
+      }
+      
+      if (response.income_list && response.income_list.length > 0) {
+        incomeList.value = response.income_list.map((item: any) => ({
+          id: item.id,
+          occurredAt: new Date(item.occurred_at).toISOString().split('T')[0],
+          category: item.category,
+          amount: item.amount,
+          counterparty: item.counterparty,
+          hasEvidence: item.has_evidence,
+        }));
+      }
+      
+      if (response.expense_list && response.expense_list.length > 0) {
+        expenseList.value = response.expense_list.map((item: any) => ({
+          id: item.id,
+          occurredAt: new Date(item.occurred_at).toISOString().split('T')[0],
+          category: item.category,
+          amount: item.amount,
+          counterparty: item.counterparty,
+          hasEvidence: item.has_evidence,
+        }));
+      }
+      
+      if (response.satisfaction) {
+        satisfaction.value = {
+          score: response.satisfaction.score || 0,
+          count: response.satisfaction.count || 0,
+          updatedAt: response.satisfaction.updated_at || new Date().toISOString(),
+        };
+      }
+      
+      if (response.notices && response.notices.length > 0) {
+        importantNotices.value = response.notices.map((notice: any) => ({
+          id: notice.id,
+          title: notice.title,
+          icon: notice.type === 'WARNING' ? '⚠️' : notice.type === 'SUCCESS' ? '🎉' : '🔔',
+          createdAt: notice.created_at,
+          type: notice.type?.toLowerCase() || 'info',
+          content: notice.content || '',
+        }));
+      }
+      
+      if (response.votes && response.votes.length > 0) {
+        votes.value = response.votes.map((vote: any) => ({
+          id: vote.id,
+          title: vote.title,
+          statusText: vote.status_text,
+          endTime: vote.end_time,
+          participationRate: vote.participation_rate,
+          supportRate: vote.support_rate,
+        }));
+      }
+      
+      if (response.inquiries && response.inquiries.length > 0) {
+        inquiries.value = response.inquiries.map((inquiry: any) => ({
+          id: inquiry.id,
+          content: inquiry.content,
+          createdAt: inquiry.created_at,
+          status: inquiry.status,
+          statusText: inquiry.status_text,
+          repliedAt: inquiry.replied_at,
+        }));
+      }
+      
+      if (response.monthly_hash) {
+        monthlyHash.value = response.monthly_hash;
+      }
+      
+      if (response.maintenance_fund) {
+        maintenanceFund.value = {
+          balance: response.maintenance_fund.balance,
+          change: response.maintenance_fund.change,
+          totalUsed: response.maintenance_fund.total_used,
+        };
+      }
+      
+      if (response.service_records && response.service_records.length > 0) {
+        dailyServices.value = response.service_records.map((record: any) => ({
+          id: record.id,
+          title: record.title,
+          description: record.description || '',
+          image: record.image_url || `https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400&h=300&fit=crop`,
+          time: record.start_time ? new Date(record.start_time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) + ' - ' + (record.end_time ? new Date(record.end_time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }) : '--:--') : '--:--',
+          staff: record.staff_name || '未知',
+          status: record.status,
+          statusText: record.status === 'COMPLETED' ? '已完成' : record.status === 'IN_PROGRESS' ? '进行中' : '待处理',
+        }));
+      }
+      
+      if (response.service_metrics) {
+        serviceMetrics.value = [
+          { name: '保洁达标率', current: `${response.service_metrics.cleaning_rate}%`, target: '98%', percentage: response.service_metrics.cleaning_rate, status: response.service_metrics.cleaning_rate >= 98 ? 'success' : 'warning', statusText: response.service_metrics.cleaning_rate >= 98 ? '达标' : '待改进', color: response.service_metrics.cleaning_rate >= 98 ? '#52c41a' : '#faad14' },
+          { name: '维修响应时长', current: `${response.service_metrics.repair_response_time}分钟`, target: '<30分钟', percentage: Math.min(100, (30 / response.service_metrics.repair_response_time) * 100), status: response.service_metrics.repair_response_time <= 30 ? 'success' : 'warning', statusText: response.service_metrics.repair_response_time <= 30 ? '达标' : '待改进', color: response.service_metrics.repair_response_time <= 30 ? '#52c41a' : '#faad14' },
+          { name: '质询回复率', current: `${response.service_metrics.inquiry_reply_rate}%`, target: '100%', percentage: response.service_metrics.inquiry_reply_rate, status: response.service_metrics.inquiry_reply_rate >= 98 ? 'success' : 'warning', statusText: response.service_metrics.inquiry_reply_rate >= 98 ? '达标' : '待改进', color: response.service_metrics.inquiry_reply_rate >= 98 ? '#52c41a' : '#faad14' },
+          { name: '设备完好率', current: `${response.service_metrics.device_health_rate}%`, target: '95%', percentage: response.service_metrics.device_health_rate, status: response.service_metrics.device_health_rate >= 95 ? 'success' : 'warning', statusText: response.service_metrics.device_health_rate >= 95 ? '达标' : '待改进', color: response.service_metrics.device_health_rate >= 95 ? '#52c41a' : '#faad14' },
+        ];
+      }
+    }
+  } catch (error) {
+    console.error('获取公示数据失败:', error);
+  } finally {
+    isRefreshing.value = false;
+  }
 };
 
 // 图表数据
@@ -1189,7 +1254,6 @@ const serviceMetricsOptions = {
   },
 };
 
-// 业主参与度数据
 const participationData = ref({
   totalHouseholds: 480,
   voteParticipation: 356,
@@ -1201,80 +1265,6 @@ const participationRate = computed(() => {
   return Math.round((participationData.value.voteParticipation / participationData.value.totalHouseholds) * 100);
 });
 
-// 夜间模式
-const isDarkMode = ref(false);
-const toggleDarkMode = () => {
-  isDarkMode.value = !isDarkMode.value;
-  document.documentElement.classList.toggle('dark-mode', isDarkMode.value);
-};
-
-// 数据刷新
-const refreshTime = ref(new Date());
-const isRefreshing = ref(false);
-const showRefreshToast = ref(false);
-
-const refreshData = async () => {
-  isRefreshing.value = true;
-  showRefreshToast.value = true;
-
-  try {
-    await loadDisclosureData();
-    refreshTime.value = new Date();
-  } finally {
-    isRefreshing.value = false;
-    setTimeout(() => {
-      showRefreshToast.value = false;
-    }, 3000);
-  }
-};
-
-// 快捷操作
-const quickActions = [
-  { id: 1, icon: '报表', title: '查看报表', action: () => activeTab.value = 'income' },
-  { id: 2, icon: '投票', title: '参与投票', action: () => document.querySelector('.vote-section')?.scrollIntoView({ behavior: 'smooth' }) },
-  { id: 3, icon: '质询', title: '提交质询', action: () => showFeedbackModal.value = true },
-  { id: 4, icon: '联系', title: '联系物业', action: () => window.open('tel:010-12345678') },
-];
-
-// 语音播报
-const isSpeechEnabled = ref(false);
-const speechSynthesis = ref<SpeechSynthesis | null>(null);
-
-const toggleSpeech = () => {
-  if (!('speechSynthesis' in window)) {
-    alert('抱歉，您的浏览器不支持语音播报功能');
-    return;
-  }
-
-  isSpeechEnabled.value = !isSpeechEnabled.value;
-
-  if (isSpeechEnabled.value) {
-    speechSynthesis.value = window.speechSynthesis;
-    announceImportantInfo();
-  } else {
-    stopSpeech();
-  }
-};
-
-const stopSpeech = () => {
-  if (speechSynthesis.value) {
-    speechSynthesis.value.cancel();
-  }
-};
-
-const announceImportantInfo = () => {
-  if (!isSpeechEnabled.value || !speechSynthesis.value) return;
-
-  const text = `欢迎访问${communityInfo.value.name}物业公示平台。本月收入${formatNumber(financialSummary.value.monthlyIncome)}元，支出${formatNumber(financialSummary.value.monthlyExpense)}元，当前满意度${satisfaction.value.score}分。`;
-
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'zh-CN';
-  utterance.rate = 1;
-  utterance.pitch = 1;
-
-  speechSynthesis.value.speak(utterance);
-};
-
 onMounted(() => {
   startCarousel();
   loadDisclosureData();
@@ -1283,122 +1273,6 @@ onMounted(() => {
     weather.value = `晴 ${Math.floor(Math.random() * 5) + 24}°C`;
   }, 300000);
 });
-
-const loadDisclosureData = async () => {
-  isRefreshing.value = true;
-  try {
-    const response: any = await publicDisclosureApi.getDisclosure(1);
-    
-    if (response) {
-      // 小区信息
-      if (response.community_info) {
-        communityInfo.value = {
-          name: response.community_info.name || communityInfo.value.name,
-          address: response.community_info.address || communityInfo.value.address,
-          contactPhone: response.community_info.contact_phone,
-          totalHouseholds: response.community_info.total_households,
-        };
-      }
-      
-      // 财务摘要
-      if (response.financial_summary) {
-        financialSummary.value = {
-          monthlyIncome: response.financial_summary.monthly_income || 0,
-          monthlyExpense: response.financial_summary.monthly_expense || 0,
-          balance: response.financial_summary.balance || 0,
-          incomeChange: response.financial_summary.income_change || 0,
-          expenseChange: response.financial_summary.expense_change || 0,
-          balanceChange: response.financial_summary.balance_change || 0,
-        };
-      }
-      
-      // 收入列表
-      if (response.income_list && response.income_list.length > 0) {
-        incomeList.value = response.income_list.map((item: any) => ({
-          id: item.id,
-          occurredAt: new Date(item.occurred_at).toISOString().split('T')[0],
-          category: item.category,
-          amount: item.amount,
-          counterparty: item.counterparty,
-          hasEvidence: item.has_evidence,
-        }));
-      }
-      
-      // 支出列表
-      if (response.expense_list && response.expense_list.length > 0) {
-        expenseList.value = response.expense_list.map((item: any) => ({
-          id: item.id,
-          occurredAt: new Date(item.occurred_at).toISOString().split('T')[0],
-          category: item.category,
-          amount: item.amount,
-          counterparty: item.counterparty,
-          hasEvidence: item.has_evidence,
-        }));
-      }
-      
-      // 满意度
-      if (response.satisfaction) {
-        satisfaction.value = {
-          score: response.satisfaction.score || 0,
-          count: response.satisfaction.count || 0,
-          updatedAt: response.satisfaction.updated_at || new Date().toISOString(),
-        };
-      }
-      
-      // 公告
-      if (response.notices && response.notices.length > 0) {
-        importantNotices.value = response.notices.map((notice: any) => ({
-          id: notice.id,
-          title: notice.title,
-          icon: '📢',
-          createdAt: notice.created_at,
-        }));
-      }
-      
-      // 投票
-      if (response.votes && response.votes.length > 0) {
-        votes.value = response.votes.map((vote: any) => ({
-          id: vote.id,
-          title: vote.title,
-          statusText: vote.status_text,
-          endTime: vote.end_time,
-          participationRate: vote.participation_rate,
-          supportRate: vote.support_rate,
-        }));
-      }
-      
-      // 质询
-      if (response.inquiries && response.inquiries.length > 0) {
-        inquiries.value = response.inquiries.map((inquiry: any) => ({
-          id: inquiry.id,
-          content: inquiry.content,
-          createdAt: inquiry.created_at,
-          status: inquiry.status,
-          statusText: inquiry.status_text,
-          repliedAt: inquiry.replied_at,
-        }));
-      }
-      
-      // 月度哈希
-      if (response.monthly_hash) {
-        monthlyHash.value = response.monthly_hash;
-      }
-      
-      // 维修基金
-      if (response.maintenance_fund) {
-        maintenanceFund.value = {
-          balance: response.maintenance_fund.balance,
-          change: response.maintenance_fund.change,
-          totalUsed: response.maintenance_fund.total_used,
-        };
-      }
-    }
-  } catch (error) {
-    console.error('获取公示数据失败:', error);
-  } finally {
-    isRefreshing.value = false;
-  }
-};
 </script>
 
 <style scoped>
@@ -1993,6 +1867,32 @@ a:hover {
 .service-status.in_progress {
   background: #dbeafe;
   color: #2563eb;
+}
+
+.service-gallery-scroll {
+  max-height: 520px;
+  overflow-y: auto;
+  margin-bottom: 24px;
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.service-gallery-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.service-gallery-scroll::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.service-gallery-scroll::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.service-gallery-scroll::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .service-stats {

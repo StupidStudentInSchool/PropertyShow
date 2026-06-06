@@ -6,6 +6,7 @@ import { LedgerEntry, EntryType } from '../../entities/ledger-entry.entity';
 import { Vote, VoteStatus } from '../../entities/vote.entity';
 import { Inquiry } from '../../entities/inquiry.entity';
 import { Disclosure, DisclosureStatus, DisclosureType } from '../../entities/disclosure.entity';
+import { ServiceRecord, ServiceStatus } from '../../entities/service-record.entity';
 import * as crypto from 'crypto';
 
 interface FeedbackData {
@@ -27,18 +28,25 @@ export class PublicService {
     private inquiryRepository: Repository<Inquiry>,
     @InjectRepository(Disclosure)
     private disclosureRepository: Repository<Disclosure>,
+    @InjectRepository(ServiceRecord)
+    private serviceRecordRepository: Repository<ServiceRecord>,
   ) {}
 
   async getDisclosure(communityId: number) {
     const community = await this.communityRepository.findOne({
-      where: { id: communityId, status: CommunityStatus.ACTIVE },
+      where: { id: communityId },
     });
 
-    if (!community) {
-      return this.getDefaultDisclosure();
-    }
+    // 使用默认小区信息，如果数据库中没有记录
+    const communityInfo = community || {
+      id: 1,
+      name: '阳光花园示范小区',
+      address: '北京市朝阳区示范路1号',
+      contactPhone: '010-12345678',
+      totalHouseholds: 480,
+    };
 
-    const [incomeEntries, expenseEntries, votes, inquiries, notices] = await Promise.all([
+    const [incomeEntries, expenseEntries, votes, inquiries, notices, serviceRecords] = await Promise.all([
       this.ledgerEntryRepository.find({
         where: { communityId, type: EntryType.INCOME },
         order: { occurredAt: 'DESC' },
@@ -62,6 +70,11 @@ export class PublicService {
         where: { communityId, status: DisclosureStatus.PUBLISHED, type: DisclosureType.ANNOUNCEMENT },
         order: { publishedAt: 'DESC' },
         take: 5,
+      }),
+      this.serviceRecordRepository.find({
+        where: { communityId },
+        order: { createdAt: 'DESC' },
+        take: 10,
       }),
     ]);
 
@@ -118,10 +131,10 @@ export class PublicService {
 
     return {
       community_info: {
-        name: community.name,
-        address: community.address,
-        contact_phone: community.contactPhone,
-        total_households: community.totalHouseholds,
+        name: communityInfo.name,
+        address: communityInfo.address,
+        contact_phone: communityInfo.contactPhone,
+        total_households: communityInfo.totalHouseholds,
       },
       financial_summary: {
         monthly_income: currentMonthIncome,
@@ -165,6 +178,18 @@ export class PublicService {
         type: notice.type,
         created_at: notice.createdAt.toISOString(),
       })),
+      service_records: serviceRecords.map((record) => ({
+        id: record.id,
+        title: record.title,
+        description: record.description,
+        category: record.category,
+        status: record.status,
+        staff_name: record.staffName,
+        start_time: record.startTime ? record.startTime.toISOString() : null,
+        end_time: record.endTime ? record.endTime.toISOString() : null,
+        image_url: record.imageUrl,
+        created_at: record.createdAt.toISOString(),
+      })),
       satisfaction: {
         score: Math.round((Math.random() * 1 + 3.5) * 10) / 10,
         count: Math.floor(Math.random() * 100 + 50),
@@ -173,7 +198,7 @@ export class PublicService {
       monthly_hash: monthlyDataHash,
       income_list: incomeEntries.slice(0, 5).map((entry) => ({
         id: entry.id,
-        occurred_at: entry.occurredAt.toISOString(),
+        occurred_at: new Date(entry.occurredAt).toISOString(),
         category: entry.category,
         amount: entry.amount,
         counterparty: entry.counterparty || '-',
@@ -181,7 +206,7 @@ export class PublicService {
       })),
       expense_list: expenseEntries.slice(0, 5).map((entry) => ({
         id: entry.id,
-        occurred_at: entry.occurredAt.toISOString(),
+        occurred_at: new Date(entry.occurredAt).toISOString(),
         category: entry.category,
         amount: entry.amount,
         counterparty: entry.counterparty || '-',

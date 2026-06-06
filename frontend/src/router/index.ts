@@ -9,6 +9,11 @@ const router = createRouter({
       component: () => import('@/views/Login.vue')
     },
     {
+      path: '/admin',
+      name: 'admin',
+      component: () => import('@/views/Admin.vue')
+    },
+    {
       path: '/disclosure/:communityId?',
       name: 'public-disclosure',
       component: () => import('@/views/PublicDisclosure.vue')

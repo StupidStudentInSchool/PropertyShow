@@ -12,6 +12,7 @@ import { GovernanceModule } from './modules/governance/governance.module';
 import { DisclosureModule } from './modules/disclosure/disclosure.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { PublicModule } from './modules/public/public.module';
+import { ServiceRecordModule } from './modules/service-record/service-record.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { PublicModule } from './modules/public/public.module';
     DisclosureModule,
     AuditModule,
     PublicModule,
+    ServiceRecordModule,
   ],
 })
 export class AppModule {}
